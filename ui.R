@@ -1,5 +1,6 @@
 library(shiny)
 library(DT)
+library(shinyWidgets)
 
 # constants
 github.url <- 'https://github.com/indrapaul824/interactive_data_analyser'
@@ -25,9 +26,11 @@ completeModelSummary <- function() {
 
 
 shinyUI(
+ 
   fluidPage(titlePanel('Projet Programmation Web'),
-
+            
     navbarPage('',
+      #tabPanel('0. About',
 
       # Problem Description
       # tabPanel('0. About',
@@ -113,19 +116,51 @@ shinyUI(
             selectInput('statisticalTest', 'Select statistical test', 
                         choices=c('Chi-squared (khi2)', 'ANOVA', 'Correlation Matrix'),
                         selected='Correlation Matrix'),
+           
           ),
+          
          
           mainPanel(
-            h4('Metric results'),
+            fluidRow(
+              # Colonne vide pour décaler le prettySwitch à droite
+              column(width = 10),
+              
+              # Utilise prettySwitch à la place de toggleState
+              column(width = 2, align = "right",
+                     prettySwitch('toggle', 'show Pairs Plot', value = FALSE)
+              )
+            ),
+            # Utilise une condition pour afficher le contenu en fonction de l'état du toggle switch
+            # Utilise une condition pour afficher le contenu en fonction de l'état du toggle switch
+            conditionalPanel(
+              condition = "input.toggle == true",
+              fluidRow(
+                column(width = 12,
+                       wellPanel(
+                         h4('Pairs Plot (seulement les variables avec une variance non nulle)'),
+                         plotOutput('expPairsPlot', width='100%', height='600px')
+                       )
+                )
+              )
+            ),
             
-            verbatimTextOutput("metricResults"),
-            
-            h4('One and Two Variable Plot'),
-            plotOutput('expSinglePlot'),
-            h4('Pairs Plot (only non-zero variance variables shown)'),
-            plotOutput('expPairsPlot', width='100%', height='800px'),
+            conditionalPanel(
+              condition = "input.toggle == false",
+              fluidRow(
+                column(width = 12,
+                       wellPanel(
+                       h4('One and Two Variable Plot'),
+                       plotOutput('expSinglePlot'),
+                       h4('Metric results'),
+                       verbatimTextOutput("metricResults")
+                )
+                )
+              )
+            )
+          
             
           )
+
         )
       ),
      # build model
@@ -185,5 +220,6 @@ shinyUI(
         )
       )
     )
+
   )
 )
