@@ -109,13 +109,22 @@ shinyUI(
               selected='jitter'),
             uiOutput('expXaxisVarSelector'),
             uiOutput('expYaxisVarSelector'),
-            uiOutput('expColorVarSelector')
+            uiOutput('expColorVarSelector'),
+            selectInput('statisticalTest', 'Select statistical test', 
+                        choices=c('Chi-squared (khi2)', 'ANOVA', 'Correlation Matrix'),
+                        selected='Correlation Matrix'),
           ),
+         
           mainPanel(
+            h4('Metric results'),
+            
+            verbatimTextOutput("metricResults"),
+            
             h4('One and Two Variable Plot'),
             plotOutput('expSinglePlot'),
             h4('Pairs Plot (only non-zero variance variables shown)'),
-            plotOutput('expPairsPlot', width='100%', height='800px')
+            plotOutput('expPairsPlot', width='100%', height='800px'),
+            
           )
         )
       ),
@@ -178,4 +187,3 @@ shinyUI(
     )
   )
 )
-
