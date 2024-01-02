@@ -1,0 +1,33 @@
+name: data-analyser
+channels:
+  - defaults
+  - conda-forge
+dependencies:
+  - jupyter
+  - kaggle
+  - radian
+  - r-base
+  - r-essentials
+  - r-dplyr
+  - r-dt
+  - r-flexdashboard
+  - r-plotly
+  - r-shiny
+  - r-shinydashboard
+  - r-shinythemes
+  - r-shinycssloaders
+  - r-rio
+  - r-stargazer
+  - r-tidyverse
+  - r-rmarkdown
+  - r-irkernel
+  - r-languageserver
+  - r-caret
+  - r-ggplot2
+  - r-corrplot
+  - r-gbm
+  - r-klar
+  - r-mboost
+  - r-psych
+  - r-purrr
+  - r-yardstick
