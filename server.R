@@ -15,6 +15,7 @@ library(psych)
 library(purrr)
 library(pROC)
 library(yardstick)
+library(DT)  # Add this line for the 'DT' package
 
 
 # Disable shiny widget, from:
