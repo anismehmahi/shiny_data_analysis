@@ -25,34 +25,34 @@ completeModelSummary <- function() {
 
 
 shinyUI(
-  fluidPage(titlePanel('Auto-Vis-ML - Automated Data Visualiser and ML Model Trainer'),
+  fluidPage(titlePanel('Projet Programmation Web'),
 
     navbarPage('',
 
       # Problem Description
-      tabPanel('0. About',
-               fluidPage(
-                 titlePanel(p("About the Project", style = "color:#3474A7")),
-                 h4('Summary'),
-                 p('This Shiny App is an Automated Platform that helps user to automate data visualization 
-                      and model training evaluation on different machine learning models as applied to the selected Data of Choice'),
-                 br(), br(),
-                 h4('Steps to complete and evaluate a machine learning model'),
-                 tags$ol(
-                   tags$li('Select the data - choose the data you want to use'),
-                   tags$li('Examine the data summary - see what is in the data'),
-                   tags$li('Explore the data - see what features to use in a model'),
-                   tags$li('Build a prediction model - pre-process data, select features, and generate model'),
-                   tags$li('Evaluate prediction model - estimate in-sample and out-of-sample errors'),
-                   tags$li('Predict outcomes for test data')
-                 ),
-                 br(), br(),
-                 h4('Source Code and some sample data available'),
-                 a(github.url),
-                 br(), br(),
-                 br(), br()
-               )
-      ),
+      # tabPanel('0. About',
+      #          fluidPage(
+      #            titlePanel(p("About the Project", style = "color:#3474A7")),
+      #            h4('Summary'),
+      #            p('This Shiny App is an Automated Platform that helps user to automate data visualization 
+      #                 and model training evaluation on different machine learning models as applied to the selected Data of Choice'),
+      #            br(), br(),
+      #            h4('Steps to complete and evaluate a machine learning model'),
+      #            tags$ol(
+      #              tags$li('Select the data - choose the data you want to use'),
+      #              tags$li('Examine the data summary - see what is in the data'),
+      #              tags$li('Explore the data - see what features to use in a model'),
+      #              tags$li('Build a prediction model - pre-process data, select features, and generate model'),
+      #              tags$li('Evaluate prediction model - estimate in-sample and out-of-sample errors'),
+      #              tags$li('Predict outcomes for test data')
+      #            ),
+      #            br(), br(),
+      #            h4('Source Code and some sample data available'),
+      #            a(github.url),
+      #            br(), br(),
+      #            br(), br()
+      #          )
+      # ),
       
       # upload the data and display a preview
       tabPanel('1. Upload',
@@ -67,9 +67,9 @@ shinyUI(
               uiOutput("target")
             ),
             mainPanel(
-                  h4('Data Uploaded:'),
-                  tableOutput("files"),
-                br(), br(),
+                #   h4('Data Uploaded:'),
+                #   tableOutput("files"),
+                # br(), br(),
                   h4('Data Preview:'),
                   DTOutput("head")
             )
@@ -138,7 +138,7 @@ shinyUI(
             uiOutput('featureSelectInput'),
             sliderInput("fracTrain", label = h4("Train Split %"), min=10, max=100, value=75, step=10),
             br(),
-            radioButtons('mltype', "Choose the type of Machine Learning:",
+            radioButtons('mltype', "Choose the type of the task:",
                          choices = c("Regression"="reg", "Classification"="clf"), 
                          selected = "reg"),
             uiOutput('machAlgorithm')
@@ -149,8 +149,8 @@ shinyUI(
             verbatimTextOutput('cntTest'),
             h4('Final model fit'),
             verbatimTextOutput('finalModel'),
-            h4('Summary'),
-            verbatimTextOutput('summaryModel')
+            h4('Feature Importance'),
+            verbatimTextOutput('featureImportance')
           )
         )
       ),

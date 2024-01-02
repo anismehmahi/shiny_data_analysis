@@ -50,12 +50,8 @@ shinyServer(
     })
     output$files <- renderTable(input$upload)
     output$head <- DT::renderDT(
-      dataInput(), extensions = 'Buttons', filter = "top", editable=T, rownames=F,
-      options = list(
-        dom = 'Blfrtip',
-        buttons = c('copy', 'csv', 'excel', 'pdf', 'print'),
-        lengthMenu = list(c(10, 50, 100, -1), c(10, 50, 100, "All"))
-      )
+      dataInput(), extensions = 'Buttons', filter = "top", rownames=F,
+     
     )
     
     encode_ordinal <- function(x, order = unique(x)) {
@@ -252,17 +248,43 @@ shinyServer(
     runModel <- reactive({
       applyModel(input$machLearnAlgorithm, input$featureSelect)
     })
-    # if summary(fit) has names, use it, if not, do not
-    output$summaryModel <- renderPrint({
-      if (!is.null(names(summary(runModel()))))
-        print(summary(runModel()))
-      else
-        'Same as Final Model Fit above'
-    }, width = 10000)
+    
+    
+    # # if summary(fit) has names, use it, if not, do not
+    # output$summaryModel <- renderPrint({
+    #   if (!is.null(names(summary(runModel()))))
+    #     print(summary(runModel()))
+    #   else
+    #     'Same as Final Model Fit above'
+    # }, width = 10000)
+    # 
+    
+    output$featureImportance <- renderPrint({
+      model <- runModel()  # Assuming `runModel()` returns your trained model
+      
+      v <- varImp(model,scale = TRUE)[["importance"]]
+      v$Overall <- v$Overall / sum(v$Overall)
+
+      imp <- as.data.frame(v)
+      imp <- data.frame(names= rownames(imp), overall = imp$Overall)
+      imp <- imp[order(imp$overall,decreasing = T),]
+      
+      print(imp)
+      
+
+    }, width = 10000
+    )
+    
+    
+    
+    
+    
+    
     # summary of final model
     output$finalModel <- renderPrint({
       print(runModel())
     }, width = 10000)
+
 
     ## Prediction Model Evaluation
     evalModel <- function(testData, features) {
