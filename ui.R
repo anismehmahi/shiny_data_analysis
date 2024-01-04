@@ -1,8 +1,7 @@
 library(shiny)
 library(DT)
+library(pROC)
 
-# constants
-github.url <- 'https://github.com/indrapaul824/interactive_data_analyser'
 
 # Disable shiny widget, from:
 # https://groups.google.com/forum/#!topic/shiny-discuss/uSetp4TtW-s
@@ -25,7 +24,8 @@ completeModelSummary <- function() {
 
 
 shinyUI(
-  fluidPage(titlePanel('Projet Programmation Web'),
+  fluidPage(
+    titlePanel('Projet Programmation Web'),
 
     navbarPage('',
 
@@ -162,7 +162,11 @@ shinyUI(
             wellPanel(
               h4('Estimated In Sample Accuracy (within training data)'),
               verbatimTextOutput('inSampleAccuracy'),
-              plotOutput("inSamplePlot")
+              plotOutput("inSamplePlot"),
+              conditionalPanel(
+                condition = "output.residualsplottrain != NULL",
+                plotOutput("residualsplottrain")  
+              ),
             )
           ),
           column(6,
@@ -170,7 +174,14 @@ shinyUI(
               h4('Estimated Out of Sample Accuracy (within verification data)'),
               verbatimTextOutput('outOfSampleAccuracy'),
 
-              plotOutput("outOfSamplePlot")
+              plotOutput("outOfSamplePlot"),
+              conditionalPanel(
+                condition = "output.residualsplottest != NULL",
+                plotOutput("residualsplottest")  
+              ),
+
+              
+              
             )
           )
         )

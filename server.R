@@ -17,8 +17,6 @@ library(pROC)
 library(yardstick)
 
 
-# Disable shiny widget, from:
-# https://groups.google.com/forum/#!topic/shiny-discuss/uSetp4TtW-s
 disable <- function(x) {
   if (inherits(x, 'shiny.tag')) {
     if (x$name %in% c('input', 'select'))
@@ -34,6 +32,7 @@ disable <- function(x) {
 
 shinyServer(
   function(input, output) {
+ 
     ## Data Upload
     dataInput <- reactive({
       req(input$upload)
@@ -250,14 +249,7 @@ shinyServer(
     })
     
     
-    # # if summary(fit) has names, use it, if not, do not
-    # output$summaryModel <- renderPrint({
-    #   if (!is.null(names(summary(runModel()))))
-    #     print(summary(runModel()))
-    #   else
-    #     'Same as Final Model Fit above'
-    # }, width = 10000)
-    # 
+
     
     output$featureImportance <- renderPrint({
       model <- runModel()  # Assuming `runModel()` returns your trained model
@@ -371,6 +363,81 @@ shinyServer(
         df
       evalModel(df, input$featureSelect)
     }, width = 10000)
+    
+    output$residualsplottest <-renderPlot({
+      df <- testData()
+      
+      if (input$mltype != "clf") {
+        
+        predictions <- predict(runModel(), select(df, one_of(input$featureSelect)))
+        truthes <- df[, input$target]
+        truth_predicted <- data.frame(
+          obs = truthes,
+          pred = predictions
+        )
+        
+        residuals <- truthes - predictions
+        standard_deviation <- sd(residuals)
+        
+        ggplot(truth_predicted, aes(x = pred, y = obs - pred)) +
+          geom_point() +
+          geom_hline(yintercept = 0, linetype = "dashed", color = "red") +
+          geom_hline(yintercept = 2 * standard_deviation, linetype = "dashed", color = "blue") +
+          geom_hline(yintercept = -2 * standard_deviation, linetype = "dashed", color = "blue") +
+          labs(x = "Predicted", y = "Residuals") +
+          ggtitle("Residuals Plot (Test)") +
+          theme(text = element_text(size = 20), plot.title = element_text(hjust = 0.5))
+      }
+      else {
+        df[, input$target] <- as.factor(df[, input$target])
+        predictions <- predict(runModel(), select(df, one_of(input$featureSelect)))
+        truthes <- df[, input$target]
+        
+        roc_curve <- roc(truthes, as.numeric(predictions))
+        plot(roc_curve, col = "blue", main = "ROC Curve", lwd = 2)
+        
+
+      }
+      
+    })
+    
+    
+    output$residualsplottrain <-renderPlot({
+      df <- trainData()
+      if (input$mltype != "clf") {
+       
+        predictions <- predict(runModel(), select(df, one_of(input$featureSelect)))
+        truthes <- df[, input$target]
+        truth_predicted <- data.frame(
+          obs = truthes,
+          pred = predictions
+        )
+        
+        residuals <- truthes - predictions
+        standard_deviation <- sd(residuals)
+        
+        ggplot(truth_predicted, aes(x = pred, y = obs - pred)) +
+          geom_point() +
+          geom_hline(yintercept = 0, linetype = "dashed", color = "red") +
+          geom_hline(yintercept = 2 * standard_deviation, linetype = "dashed", color = "blue") +
+          geom_hline(yintercept = -2 * standard_deviation, linetype = "dashed", color = "blue") +
+          labs(x = "Predicted", y = "Residuals") +
+          ggtitle("Residuals Plot (Train)") +
+          theme(text = element_text(size = 20), plot.title = element_text(hjust = 0.5))
+      }
+      else {
+        df[, input$target] <- as.factor(df[, input$target])
+        predictions <- predict(runModel(), select(df, one_of(input$featureSelect)))
+        truthes <- df[, input$target]
+
+        roc_curve <- roc(truthes, as.numeric(predictions))
+        plot(roc_curve, col = "blue", main = "ROC Curve", lwd = 2)
+      }
+      
+    })
+    
+    
+    
 
     output$outOfSamplePlot <- renderPlot({
       df <- testData()
@@ -390,7 +457,7 @@ shinyServer(
       if (input$mltype == "clf") {
         # plot confusion matrix
         cm <- conf_mat(truth_predicted, obs, pred)
-        autoplot(cm, type='heatmap', scale_fill_gradient(low="#D6EAF8",high = "#2E86C1")) + 
+        autoplot(cm, type='heatmap', scale_fill_gradient(low="#D6EAF8", high="#2E86C1")) + 
           ggtitle("Confusion Matrix (Test)") +
           theme(text = element_text(size=20), plot.title = element_text(hjust = 0.5))
       }
@@ -401,8 +468,10 @@ shinyServer(
           geom_abline(intercept=0, slope=1, color="red") +
           labs(x="Predicted", y="Observed")  +
           ggtitle("Residuals vs Fitted Values (Test)") +
-          theme(text = element_text(size=20), plot.title = element_text(hjust = 0.5))
+          theme(text = element_text(size=20), plot.title = element_text(hjust = 0.5)) 
       }
+
     })
+    
   }
 )
