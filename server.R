@@ -15,6 +15,7 @@ library(psych)
 library(purrr)
 library(pROC)
 library(yardstick)
+library(kableExtra)
 
 
 disable <- function(x) {
@@ -50,7 +51,7 @@ shinyServer(
     output$files <- renderTable(input$upload)
     output$head <- DT::renderDT(
       dataInput(), extensions = 'Buttons', filter = "top", rownames=F,
-     
+      
     )
     
     encode_ordinal <- function(x, order = unique(x)) {
@@ -101,35 +102,35 @@ shinyServer(
     output$OutcomeSummaryOut <- renderTable({ 
       describe(data()[input$target])
     }, rownames = T)
-
+    
     
     
     ## Explore Data
     # pairs plot - always
     output$expPairsPlot <- renderPlot({
-      featurePlot(x=data(), 
-        y=data()[input$target], 
-        plot='pairs', auto.key=list(columns=2))
+      featurePlot(x = data(), 
+                  y = data()[input$target], 
+                  plot = 'pairs', auto.key = list(columns = 2))
     })
     # generate variable selectors for individual plots
     # ideas from https://gist.github.com/jcheng5/3239667
     output$expXaxisVarSelector <- renderUI({
       selectInput('expXaxisVar', 'Variable on x-axis', 
-        choices=as.list(colnames(data())), selected=colnames(data())[1])
+                  choices = as.list(colnames(data())), selected = colnames(data())[1])
     })
     # generate variable selectors for individual plots
     getYaxisVarSelector <- function(geom) { 
       # wy = wtih y, wo = without y (or disable)
       widget <- selectInput('expYaxisVar', 'Variable on y-axis', 
-        choices=as.list(colnames(data())), selected=colnames(data())[2])
+                            choices = as.list(colnames(data())), selected = colnames(data())[2])
       wy <- widget
       woy <- disable(widget)
       switch(geom,
-        point = wy,
-        boxplot = wy,
-        histogram = woy,
-        density = woy,
-        jitter = wy
+             point = wy,
+             boxplot = wy,
+             histogram = woy,
+             density = woy,
+             jitter = wy
       )
     }
     output$expYaxisVarSelector <- renderUI({
@@ -137,36 +138,75 @@ shinyServer(
     })
     output$expColorVarSelector <- renderUI({
       selectInput('expColorVar', 'Variable to color by', 
-        choices=as.list(c('None', colnames(data()))),
-        selected=input$target)
+                  choices = as.list(c('None', colnames(data()))),
+                  selected = input$target)
     })
     # create ggplot statement based on geom
     add_ggplot <- function(geom) {
-      gx <- ggplot(data(), aes_string(x=input$expXaxisVar))
-      gxy <- ggplot(data(), aes_string(x=input$expXaxisVar, y=input$expYaxisVar))
+      gx <- ggplot(data(), aes_string(x = input$expXaxisVar))
+      gxy <- ggplot(data(), aes_string(x = input$expXaxisVar, y = input$expYaxisVar))
       switch(geom,
-        point = gxy,
-        boxplot = gxy,
-        histogram = gx,
-        density = gx,
-        jitter = gxy
+             point = gxy,
+             boxplot = gxy,
+             histogram = gx,
+             density = gx,
+             jitter = gxy
       )
     }
     # create ggplot geom
     add_geom <- function(geom) {
       switch(geom,
-        point = geom_point(aes_string(color=input$expColorVar)),
-        boxplot = geom_boxplot(aes_string(color=input$expColorVar)),
-        histogram = geom_histogram(aes_string(color=input$expColorVar)),
-        density = geom_density(aes_string(color=input$expColorVar)),
-        jitter = geom_jitter(aes_string(color=input$expColorVar))
+             point = geom_point(aes_string(color = input$expColorVar)),
+             boxplot = geom_boxplot(aes_string(color = input$expColorVar)),
+             histogram = geom_histogram(aes_string(color = input$expColorVar)),
+             density = geom_density(aes_string(color = input$expColorVar)),
+             jitter = geom_jitter(aes_string(color = input$expColorVar))
       )
     }
     output$expSinglePlot <- renderPlot({
       g <- add_ggplot(input$singlePlotGeom) + add_geom(input$singlePlotGeom)
       print(g)
     })
-
+    # ...
+    
+    # Ajoute cette partie pour les calculs sans affichage basés sur les variables
+    observeEvent(c(input$expXaxisVar, input$expYaxisVar, input$statisticalTest), {
+      
+      # Calculs basés sur la méthode et les variables sélectionnées
+      if (!is.null(input$statisticalTest)) {
+        
+        if (input$statisticalTest == "Correlation Matrix") {
+          
+          correlation_matrix <- cor(data()[, c(input$expXaxisVar, input$expYaxisVar)], use = "complete.obs")
+          output$metricResults <- renderPrint({
+            cat("Correlation Matrix:\n")
+            print(correlation_matrix)
+          })
+          
+        }
+        else if (input$statisticalTest == 'ANOVA') {
+          anova_result <- aov(data()[[input$expYaxisVar]] ~ data()[[input$expXaxisVar]])
+          output$metricResults <- renderPrint({
+            cat("ANOVA Results:\n")
+            print(summary(anova_result))
+          })
+          
+        }
+        else if (input$statisticalTest == 'Chi-squared (khi2)') {
+          cross_table <- table(data()[[input$expXaxisVar]], data()[[input$expYaxisVar]])
+          chi_square_result <- chisq.test(cross_table)
+          output$metricResults <- renderPrint({
+            cat("Chi-Square Results:\n")
+            print(chi_square_result)
+          })
+          
+        }
+        # Ajoute d'autres conditions ici selon les nouvelles métriques que tu veux afficher
+      }
+    }, ignoreInit = TRUE)
+    
+    
+   
     ## Prediction Model
     f <- reactive({
       as.formula(paste(input$target, "~."))
@@ -174,20 +214,20 @@ shinyServer(
     # create feature selection
     output$featureSelectInput <- renderUI({
       selectInput('featureSelect', 'Select features to generate model', 
-        choices=as.list(colnames(data()[, !(names(data()) %in% c(input$target))])),
-        multiple = TRUE, selected=c(colnames(data())[1], colnames(data())[2], colnames(data())[3]))
+                  choices=as.list(colnames(data()[, !(names(data()) %in% c(input$target))])),
+                  multiple = TRUE, selected=c(colnames(data())[1], colnames(data())[2], colnames(data())[3]))
     })
     output$machAlgorithm <- renderUI({
-        selectInput('machLearnAlgorithm', 
-                    'Select the model or machine learning algorithm',
-                    choices= c('K-Nearest Neighbors' = 'knn',
-                               'Generalized Linear Model (logit)' = 'glm',
-                               'Random Forests (may take a few minutes)' = 'rf',
-                               'Gradient Boosting' = 'gbm',
-                               'Boosted Generalized Linear Model' = 'glmboost',
-                               'Linear Discriminant Analysis' = 'lda',
-                               'Naive Bayes' = 'nb'), 
-                    selected='knn')
+      selectInput('machLearnAlgorithm', 
+                  'Select the model or machine learning algorithm',
+                  choices= c('K-Nearest Neighbors' = 'knn',
+                             'Generalized Linear Model (logit)' = 'glm',
+                             'Random Forests (may take a few minutes)' = 'rf',
+                             'Gradient Boosting' = 'gbm',
+                             'Boosted Generalized Linear Model' = 'glmboost',
+                             'Linear Discriminant Analysis' = 'lda',
+                             'Naive Bayes' = 'nb'), 
+                  selected='knn')
     })
     
     #split the data into train and test
@@ -202,19 +242,19 @@ shinyServer(
       train_dt <- data()
       train_dt <- train_dt[trainRowIndex(),]
     })
-
+    
     testData <- reactive({
       test_dt <- data()
       test_dt <- test_dt[-trainRowIndex(),]
     })
-
+    
     output$cntTrain <- renderText({
       paste0("Training set: ", nrow(trainData()), " records")
     })
     output$cntTest <- renderText({
       paste0("Test set: ", nrow(testData()), " records")
     })
-
+    
     # apply model to training set
     applyModel <- function(modelType, features) {
       df <- trainData()
@@ -224,23 +264,23 @@ shinyServer(
         df[[input$target]] <- as.factor(df[[input$target]])
         if (modelType == 'gbm')
           train(f(), 
-            data=select(df, one_of(c(input$target, features))), 
-            method=modelType, preProcess=input$preProcessMethods, verbose=F, metric='Accuracy')
+                data=select(df, one_of(c(input$target, features))), 
+                method=modelType, preProcess=input$preProcessMethods, verbose=F, metric='Accuracy')
         else
           train(f(), 
-            data=select(df, one_of(c(input$target, features))), 
-            method=modelType, preProcess=input$preProcessMethods, metric='Accuracy')
+                data=select(df, one_of(c(input$target, features))), 
+                method=modelType, preProcess=input$preProcessMethods, metric='Accuracy')
       }
-
+      
       else {
         if (modelType == 'gbm')
           train(f(), 
-            data=select(df, one_of(c(input$target, features))), 
-            method=modelType, preProcess=input$preProcessMethods, verbose=F, metric='RMSE')
+                data=select(df, one_of(c(input$target, features))), 
+                method=modelType, preProcess=input$preProcessMethods, verbose=F, metric='RMSE')
         else
           train(f(), 
-            data=select(df, one_of(c(input$target, features))), 
-            method=modelType, preProcess=input$preProcessMethods, metric='RMSE')
+                data=select(df, one_of(c(input$target, features))), 
+                method=modelType, preProcess=input$preProcessMethods, metric='RMSE')
       }
     }
     # reactive functions to run and evaluate model
@@ -256,14 +296,14 @@ shinyServer(
       
       v <- varImp(model,scale = TRUE)[["importance"]]
       v$Overall <- v$Overall / sum(v$Overall)
-
+      
       imp <- as.data.frame(v)
       imp <- data.frame(names= rownames(imp), overall = imp$Overall)
       imp <- imp[order(imp$overall,decreasing = T),]
       
       print(imp)
       
-
+      
     }, width = 10000
     )
     
@@ -276,8 +316,8 @@ shinyServer(
     output$finalModel <- renderPrint({
       print(runModel())
     }, width = 10000)
-
-
+    
+    
     ## Prediction Model Evaluation
     evalModel <- function(testData, features) {
       predictions <- predict(runModel(), select(testData, one_of(features)))
@@ -303,7 +343,7 @@ shinyServer(
         print(data.frame("RMSE"=rmse, "R2"=r2, "MAE"=mae, "MASE"=mase, "AdjR2"=adjr2))
       }
     }
-
+    
     #training data accuracy
     output$inSampleAccuracy <- renderPrint({
       df <- trainData()
@@ -316,7 +356,7 @@ shinyServer(
         df
       evalModel(df, input$featureSelect)
     }, width = 10000)
-
+    
     output$inSamplePlot <- renderPlot({
       df <- trainData()
       df <- if (input$mltype == "clf") {
@@ -349,8 +389,8 @@ shinyServer(
           theme(text = element_text(size=20), plot.title = element_text(hjust = 0.5))
       }
     })
-
-
+    
+    
     #testing data accuracy
     output$outOfSampleAccuracy <- renderPrint({
       df <- testData()
