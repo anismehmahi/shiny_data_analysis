@@ -77,8 +77,20 @@ shinyServer(
     observeEvent(input$preprocess, {
       claim <- data()
       claim <- claim[complete.cases(claim),]
+      # colTypes <- map(claim, class)
+      # 
+      # for (col in colnames(claim)) {
+      #   if (colTypes[col] == 'character') {
+      #     claim[[col]] <- encode_ordinal(claim[[col]])
+      #   }
+      # }
+      data(claim)
+    })
+    
+    
+    observeEvent(input$categoricalconversion, {
+      claim <- data()
       colTypes <- map(claim, class)
-      
       for (col in colnames(claim)) {
         if (colTypes[col] == 'character') {
           claim[[col]] <- encode_ordinal(claim[[col]])
@@ -96,9 +108,69 @@ shinyServer(
                   choices=as.list(colnames(data())), multiple = T)
     })
     
-    output$PredictorsSummaryOut <- renderTable({
-      describe(data()[, !(names(data()) %in% c(input$target))])
-    }, rownames = T)
+
+    output$PredictorsSummaryOut <- renderDT({
+      numeric_data <- data() %>% select_if(is.numeric)
+      
+      # Use describe() and round() to limit the summary to three digits
+      summary_data <- describe(numeric_data)
+      summary_data[] <- lapply(summary_data, function(x) if(is.numeric(x)) round(x, 3) else x)
+      
+      datatable(
+        summary_data,
+        options = list(pageLength = 10)  # Adjust the page length as needed
+      )
+    })
+    
+      
+    
+    output$NonNumericalSummaryOut <- renderDT({
+      non_numeric_data <- data() %>% select_if(function(x) !is.numeric(x))
+
+      # Use summary() for non-numeric data
+      summary_data <- summary(non_numeric_data)
+
+      datatable(
+        summary_data,
+        options = list(pageLength = 10)  # Adjust the page length as needed
+      )
+    })
+
+
+    
+
+      
+      output$NullPercentageOut <- renderDT({
+        null_percentage <- data.frame(
+          Feature = names(data()),
+          NullPercentage = colMeans(is.na(data())) * 100
+        )
+        
+
+        null_percentage$NullPercentage <- format(round(null_percentage$NullPercentage, 2), nsmall = 2)
+        
+        
+        # Reorder the data frame in descending order of NullPercentage
+        null_percentage <- null_percentage %>% arrange(desc(NullPercentage))
+        
+        datatable(
+          null_percentage,
+          options = list(pageLength = 10),
+          rownames = FALSE  # Exclude row names from being treated as a separate column
+        )
+      })
+      
+      
+    
+# 
+#       output$PredictorsSummaryOut <- renderDT({
+#         datatable(
+#           describe(data()[, !(names(data()) %in% c(input$target))]),
+#           options = list(pageLength = 10)  # Adjust the page length as needed
+#         )
+#       })
+    
+    
     output$OutcomeSummaryOut <- renderTable({ 
       describe(data()[input$target])
     }, rownames = T)

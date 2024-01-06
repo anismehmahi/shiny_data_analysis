@@ -2,6 +2,8 @@ library(shiny)
 library(DT)
 library(shinyWidgets)
 library(pROC)
+library(plotly)
+
 
 
 # Disable shiny widget, from:
@@ -88,14 +90,21 @@ shinyUI(
             uiOutput(outputId = "dropSelected"),
             actionButton("drop", "Drop Columns"),
             br(), br(),
-            p("Press the button below to conduct basic preprocessing:"),
-            p("1. Remove rows with missing data, 2. Label Encode character data"),
-            actionButton("preprocess", "Preprocess Data")
-          ),
-          mainPanel(
-            h4('Features'),
-            tableOutput('PredictorsSummaryOut'),
+            h4("Press the buttons below for simple pre-processing :",style = 'color: black;'),
+            actionButton("preprocess", "Remove missing data"),
+            actionButton("categoricalconversion", "Oridinal-Encoding Categorical Features "),
             br(), br(),
+            #h4("Null Values Percentage",style = 'color: black;'),
+            DTOutput('NullPercentageOut'),
+          ),
+          
+          mainPanel(
+            h4('Numerical Feature'),
+            DTOutput('PredictorsSummaryOut'),
+            br(), 
+            h4('Categorical Feature'),
+            DTOutput('NonNumericalSummaryOut'),
+            br(),
             h4('Target'),
             tableOutput('OutcomeSummaryOut')
           )
@@ -178,13 +187,18 @@ shinyUI(
               selected='BoxCox', 
               multiple=TRUE
             ),
+            
+            
             uiOutput('featureSelectInput'),
             sliderInput("fracTrain", label = h4("Train Split %"), min=10, max=100, value=75, step=10),
             br(),
             radioButtons('mltype', "Choose the type of the task:",
                          choices = c("Regression"="reg", "Classification"="clf"), 
                          selected = "reg"),
-            uiOutput('machAlgorithm')
+            uiOutput('machAlgorithm'),
+           
+            
+            
           ),
           mainPanel(
             h4('Training / Test Split'),
