@@ -322,7 +322,6 @@ shinyServer(
     evalModel <- function(testData, features) {
       predictions <- predict(runModel(), select(testData, one_of(features)))
       truthes <- testData[, input$target]
-      # generate confusion matrix
       if (input$mltype == "clf") {
         print(confusionMatrix(predictions, as.factor(truthes)))
       }
