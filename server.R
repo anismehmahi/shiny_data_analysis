@@ -220,14 +220,16 @@ shinyServer(
     output$machAlgorithm <- renderUI({
       selectInput('machLearnAlgorithm', 
                   'Select the model or machine learning algorithm',
-                  choices= c('K-Nearest Neighbors' = 'knn',
-                             'Generalized Linear Model (logit)' = 'glm',
-                             'Random Forests (may take a few minutes)' = 'rf',
-                             'Gradient Boosting' = 'gbm',
-                             'Boosted Generalized Linear Model' = 'glmboost',
-                             'Linear Discriminant Analysis' = 'lda',
-                             'Naive Bayes' = 'nb'), 
-                  selected='knn')
+                  
+                  if (input$mltype == "reg") {
+                    choices= c('K-Nearest Neighbors' = 'knn',
+                               'Random Forests (may take a few minutes)' = 'rf')
+                  }
+                  else
+                    choices= c('Gradient Boosting' = 'gbm',
+                               'Random Forests (may take a few minutes)' = 'rf')
+                  ) 
+                  
     })
     
     #split the data into train and test
