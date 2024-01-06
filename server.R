@@ -77,8 +77,20 @@ shinyServer(
     observeEvent(input$preprocess, {
       claim <- data()
       claim <- claim[complete.cases(claim),]
+      # colTypes <- map(claim, class)
+      # 
+      # for (col in colnames(claim)) {
+      #   if (colTypes[col] == 'character') {
+      #     claim[[col]] <- encode_ordinal(claim[[col]])
+      #   }
+      # }
+      data(claim)
+    })
+    
+    
+    observeEvent(input$categoricalconversion, {
+      claim <- data()
       colTypes <- map(claim, class)
-      
       for (col in colnames(claim)) {
         if (colTypes[col] == 'character') {
           claim[[col]] <- encode_ordinal(claim[[col]])
@@ -96,9 +108,69 @@ shinyServer(
                   choices=as.list(colnames(data())), multiple = T)
     })
     
-    output$PredictorsSummaryOut <- renderTable({
-      describe(data()[, !(names(data()) %in% c(input$target))])
-    }, rownames = T)
+
+    output$PredictorsSummaryOut <- renderDT({
+      numeric_data <- data() %>% select_if(is.numeric)
+      
+      # Use describe() and round() to limit the summary to three digits
+      summary_data <- describe(numeric_data)
+      summary_data[] <- lapply(summary_data, function(x) if(is.numeric(x)) round(x, 3) else x)
+      
+      datatable(
+        summary_data,
+        options = list(pageLength = 10)  # Adjust the page length as needed
+      )
+    })
+    
+      
+    
+    output$NonNumericalSummaryOut <- renderDT({
+      non_numeric_data <- data() %>% select_if(function(x) !is.numeric(x))
+
+      # Use summary() for non-numeric data
+      summary_data <- summary(non_numeric_data)
+
+      datatable(
+        summary_data,
+        options = list(pageLength = 10)  # Adjust the page length as needed
+      )
+    })
+
+
+    
+
+      
+      output$NullPercentageOut <- renderDT({
+        null_percentage <- data.frame(
+          Feature = names(data()),
+          NullPercentage = colMeans(is.na(data())) * 100
+        )
+        
+
+        null_percentage$NullPercentage <- format(round(null_percentage$NullPercentage, 2), nsmall = 2)
+        
+        
+        # Reorder the data frame in descending order of NullPercentage
+        null_percentage <- null_percentage %>% arrange(desc(NullPercentage))
+        
+        datatable(
+          null_percentage,
+          options = list(pageLength = 10),
+          rownames = FALSE  # Exclude row names from being treated as a separate column
+        )
+      })
+      
+      
+    
+# 
+#       output$PredictorsSummaryOut <- renderDT({
+#         datatable(
+#           describe(data()[, !(names(data()) %in% c(input$target))]),
+#           options = list(pageLength = 10)  # Adjust the page length as needed
+#         )
+#       })
+    
+    
     output$OutcomeSummaryOut <- renderTable({ 
       describe(data()[input$target])
     }, rownames = T)
@@ -213,21 +285,33 @@ shinyServer(
     })
     # create feature selection
     output$featureSelectInput <- renderUI({
-      selectInput('featureSelect', 'Select features to generate model', 
-                  choices=as.list(colnames(data()[, !(names(data()) %in% c(input$target))])),
-                  multiple = TRUE, selected=c(colnames(data())[1], colnames(data())[2], colnames(data())[3]))
+      # Get the column names of the dataset excluding the target variable
+      feature_choices <- colnames(data())[!(colnames(data()) %in% c(input$target))]
+      
+      # Create a selectInput with all features
+      selectInput(
+        'featureSelect', 
+        'Select features to generate model', 
+        choices = as.list(feature_choices),
+        multiple = TRUE,
+        selected = feature_choices  # Select the first three features by default
+      )
     })
+    
+    
     output$machAlgorithm <- renderUI({
       selectInput('machLearnAlgorithm', 
-                  'Select the model or machine learning algorithm',
-                  choices= c('K-Nearest Neighbors' = 'knn',
-                             'Generalized Linear Model (logit)' = 'glm',
-                             'Random Forests (may take a few minutes)' = 'rf',
-                             'Gradient Boosting' = 'gbm',
-                             'Boosted Generalized Linear Model' = 'glmboost',
-                             'Linear Discriminant Analysis' = 'lda',
-                             'Naive Bayes' = 'nb'), 
-                  selected='knn')
+                  'Select the machine learning algorithm',
+                  
+                  if (input$mltype == "reg") {
+                    choices= c('Generalized Linear Model (logit)' = 'glm',
+                               'Random Forests (may take a few minutes)' = 'rf')
+                  }
+                  else
+                    choices= c('Gradient Boosting' = 'gbm',
+                               'Random Forests (may take a few minutes)' = 'rf')
+                  ) 
+                  
     })
     
     #split the data into train and test
@@ -318,30 +402,36 @@ shinyServer(
     }, width = 10000)
     
     
-    ## Prediction Model Evaluation
+    
     evalModel <- function(testData, features) {
       predictions <- predict(runModel(), select(testData, one_of(features)))
       truthes <- testData[, input$target]
+      
       if (input$mltype == "clf") {
-        print(confusionMatrix(predictions, as.factor(truthes)))
-      }
-      else {
-        # Convert target variable from factor to numeric
+        # Classification case
+        confusion_matrix <- confusionMatrix(predictions, as.factor(truthes))
+        
+    
+        # Print and return both data frames
+        print(confusion_matrix)
+        print(confusion_matrix$byClass)
+        
+        } else {
+        # Regression case
         truthes <- as.numeric(truthes)
-        # calculate RMSE
+        
+        # Your existing regression metrics
         rmse <- sqrt(mean((truthes - predictions)^2))
-        # calculate R^2
         r2 <- cor(truthes, predictions)^2
-        # calculate MAE
         mae <- mean(abs(truthes - predictions))
-        # calculate MASE
         mase <- mean(abs(truthes - predictions))/mean(abs(diff(truthes)))
-        # calculate adjusted R^2
         adjr2 <- 1 - (1 - r2)*(nrow(testData) - 1)/(nrow(testData) - length(features) - 1)
-        # return a data frame
+        
+        # Return a data frame with both regression and classification metrics
         print(data.frame("RMSE"=rmse, "R2"=r2, "MAE"=mae, "MASE"=mase, "AdjR2"=adjr2))
       }
     }
+    
     
     #training data accuracy
     output$inSampleAccuracy <- renderPrint({
