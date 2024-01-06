@@ -285,16 +285,26 @@ shinyServer(
     })
     # create feature selection
     output$featureSelectInput <- renderUI({
-      selectInput('featureSelect', 'Select features to generate model', 
-                  choices=as.list(colnames(data()[, !(names(data()) %in% c(input$target))])),
-                  multiple = TRUE, selected=c(colnames(data())[1], colnames(data())[2], colnames(data())[3]))
+      # Get the column names of the dataset excluding the target variable
+      feature_choices <- colnames(data())[!(colnames(data()) %in% c(input$target))]
+      
+      # Create a selectInput with all features
+      selectInput(
+        'featureSelect', 
+        'Select features to generate model', 
+        choices = as.list(feature_choices),
+        multiple = TRUE,
+        selected = feature_choices  # Select the first three features by default
+      )
     })
+    
+    
     output$machAlgorithm <- renderUI({
       selectInput('machLearnAlgorithm', 
-                  'Select the model or machine learning algorithm',
+                  'Select the machine learning algorithm',
                   
                   if (input$mltype == "reg") {
-                    choices= c('K-Nearest Neighbors' = 'knn',
+                    choices= c('Generalized Linear Model (logit)' = 'glm',
                                'Random Forests (may take a few minutes)' = 'rf')
                   }
                   else
@@ -392,31 +402,36 @@ shinyServer(
     }, width = 10000)
     
     
-    ## Prediction Model Evaluation
+    
     evalModel <- function(testData, features) {
       predictions <- predict(runModel(), select(testData, one_of(features)))
       truthes <- testData[, input$target]
-      # generate confusion matrix
+      
       if (input$mltype == "clf") {
-        print(confusionMatrix(predictions, as.factor(truthes)))
-      }
-      else {
-        # Convert target variable from factor to numeric
+        # Classification case
+        confusion_matrix <- confusionMatrix(predictions, as.factor(truthes))
+        
+    
+        # Print and return both data frames
+        print(confusion_matrix)
+        print(confusion_matrix$byClass)
+        
+        } else {
+        # Regression case
         truthes <- as.numeric(truthes)
-        # calculate RMSE
+        
+        # Your existing regression metrics
         rmse <- sqrt(mean((truthes - predictions)^2))
-        # calculate R^2
         r2 <- cor(truthes, predictions)^2
-        # calculate MAE
         mae <- mean(abs(truthes - predictions))
-        # calculate MASE
         mase <- mean(abs(truthes - predictions))/mean(abs(diff(truthes)))
-        # calculate adjusted R^2
         adjr2 <- 1 - (1 - r2)*(nrow(testData) - 1)/(nrow(testData) - length(features) - 1)
-        # return a data frame
+        
+        # Return a data frame with both regression and classification metrics
         print(data.frame("RMSE"=rmse, "R2"=r2, "MAE"=mae, "MASE"=mase, "AdjR2"=adjr2))
       }
     }
+    
     
     #training data accuracy
     output$inSampleAccuracy <- renderPrint({

@@ -184,7 +184,7 @@ shinyUI(
                 'Inpute missing data with k-nearest neighbors' = 'knnImpute',
                 'Principle Component Analysis (95% variance)' = 'pca'
               ),
-              selected='BoxCox', 
+              selected='center', 
               multiple=TRUE
             ),
             
