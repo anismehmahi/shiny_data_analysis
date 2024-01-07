@@ -33,7 +33,7 @@ disable <- function(x) {
 
 shinyServer(
   function(input, output) {
- 
+
     ## Data Upload
     dataInput <- reactive({
       req(input$upload)
@@ -108,7 +108,7 @@ shinyServer(
                   choices=as.list(colnames(data())), multiple = T)
     })
     
-
+    
     output$PredictorsSummaryOut <- renderDT({
       numeric_data <- data() %>% select_if(is.numeric)
       
@@ -121,54 +121,78 @@ shinyServer(
         options = list(pageLength = 10)  # Adjust the page length as needed
       )
     })
+  
+    output$nonNumericOutput <- renderUI({
+     
+        non_numeric_features <- colnames(data() %>% select_if(function(x) !is.numeric(x)))
+        selectInput("Sekectcatfeature", "Select categorical feature",
+                    choices=as.list(non_numeric_features), selected = non_numeric_features[1])
     
       
-    
+    })
+   
+    observeEvent(input$oversampleButton, {
+      #ahouter le code of oversampling
+    })
     output$NonNumericalSummaryOut <- renderDT({
       non_numeric_data <- data() %>% select_if(function(x) !is.numeric(x))
-
-      # Use summary() for non-numeric data
-      summary_data <- summary(non_numeric_data)
-
+      
+      # Variable sélectionnée dans le selectInput
+      selected_variable <- input$Sekectcatfeature
+      
+      # Si aucune variable n'est sélectionnée, utilise la première variable non numérique
+      if (is.null(selected_variable) || length(selected_variable) == 0) {
+        selected_variable <- names(non_numeric_data)[1]
+      }
+      
+      # Vérifie si des variables non numériques existent
+      if (length(names(non_numeric_data)) > 0) {
+        # Crée et stocke la table de fréquence pour la variable sélectionnée
+        freq_table <- table(non_numeric_data[[selected_variable]])
+        table_output <- data.frame(Category = names(freq_table), Frequency = as.vector(freq_table))
+        
+        # Affiche la table de fréquence
+        datatable(
+          data = table_output,
+          options = list(pageLength = 10),
+          caption = sprintf("Frequency Table for %s", selected_variable)
+        )
+      } else {
+        
+      }
+    })
+    
+    
+    
+    output$NullPercentageOut <- renderDT({
+      null_percentage <- data.frame(
+        Feature = names(data()),
+        NullPercentage = colMeans(is.na(data())) * 100
+      )
+      
+      
+      null_percentage$NullPercentage <- format(round(null_percentage$NullPercentage, 2), nsmall = 2)
+      
+      
+      # Reorder the data frame in descending order of NullPercentage
+      null_percentage <- null_percentage %>% arrange(desc(NullPercentage))
+      
       datatable(
-        summary_data,
-        options = list(pageLength = 10)  # Adjust the page length as needed
+        null_percentage,
+        options = list(pageLength = 10),
+        rownames = FALSE  # Exclude row names from being treated as a separate column
       )
     })
-
-
     
-
-      
-      output$NullPercentageOut <- renderDT({
-        null_percentage <- data.frame(
-          Feature = names(data()),
-          NullPercentage = colMeans(is.na(data())) * 100
-        )
-        
-
-        null_percentage$NullPercentage <- format(round(null_percentage$NullPercentage, 2), nsmall = 2)
-        
-        
-        # Reorder the data frame in descending order of NullPercentage
-        null_percentage <- null_percentage %>% arrange(desc(NullPercentage))
-        
-        datatable(
-          null_percentage,
-          options = list(pageLength = 10),
-          rownames = FALSE  # Exclude row names from being treated as a separate column
-        )
-      })
-      
-      
     
-# 
-#       output$PredictorsSummaryOut <- renderDT({
-#         datatable(
-#           describe(data()[, !(names(data()) %in% c(input$target))]),
-#           options = list(pageLength = 10)  # Adjust the page length as needed
-#         )
-#       })
+    
+    # 
+    #       output$PredictorsSummaryOut <- renderDT({
+    #         datatable(
+    #           describe(data()[, !(names(data()) %in% c(input$target))]),
+    #           options = list(pageLength = 10)  # Adjust the page length as needed
+    #         )
+    #       })
     
     
     output$OutcomeSummaryOut <- renderTable({ 
@@ -278,7 +302,7 @@ shinyServer(
     }, ignoreInit = TRUE)
     
     
-   
+    
     ## Prediction Model
     f <- reactive({
       as.formula(paste(input$target, "~."))
@@ -310,8 +334,8 @@ shinyServer(
                   else
                     choices= c('Gradient Boosting' = 'gbm',
                                'Random Forests (may take a few minutes)' = 'rf')
-                  ) 
-                  
+      ) 
+      
     })
     
     #split the data into train and test
@@ -373,7 +397,7 @@ shinyServer(
     })
     
     
-
+    
     
     output$featureImportance <- renderPrint({
       model <- runModel()  # Assuming `runModel()` returns your trained model
@@ -411,12 +435,12 @@ shinyServer(
         # Classification case
         confusion_matrix <- confusionMatrix(predictions, as.factor(truthes))
         
-    
+        
         # Print and return both data frames
         print(confusion_matrix)
         print(confusion_matrix$byClass)
         
-        } else {
+      } else {
         # Regression case
         truthes <- as.numeric(truthes)
         
@@ -525,7 +549,7 @@ shinyServer(
         roc_curve <- roc(truthes, as.numeric(predictions))
         plot(roc_curve, col = "blue", main = "ROC Curve", lwd = 2)
         
-
+        
       }
       
     })
@@ -534,7 +558,7 @@ shinyServer(
     output$residualsplottrain <-renderPlot({
       df <- trainData()
       if (input$mltype != "clf") {
-       
+        
         predictions <- predict(runModel(), select(df, one_of(input$featureSelect)))
         truthes <- df[, input$target]
         truth_predicted <- data.frame(
@@ -558,7 +582,7 @@ shinyServer(
         df[, input$target] <- as.factor(df[, input$target])
         predictions <- predict(runModel(), select(df, one_of(input$featureSelect)))
         truthes <- df[, input$target]
-
+        
         roc_curve <- roc(truthes, as.numeric(predictions))
         plot(roc_curve, col = "blue", main = "ROC Curve", lwd = 2)
       }
@@ -567,7 +591,7 @@ shinyServer(
     
     
     
-
+    
     output$outOfSamplePlot <- renderPlot({
       df <- testData()
       df <- if (input$mltype == "clf") {
@@ -599,8 +623,9 @@ shinyServer(
           ggtitle("Residuals vs Fitted Values (Test)") +
           theme(text = element_text(size=20), plot.title = element_text(hjust = 0.5)) 
       }
-
+      
     })
     
   }
+
 )
