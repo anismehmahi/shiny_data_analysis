@@ -16,7 +16,7 @@ library(purrr)
 library(pROC)
 library(yardstick)
 library(kableExtra)
-
+library(ROSE)
 
 disable <- function(x) {
   if (inherits(x, 'shiny.tag')) {
@@ -49,10 +49,19 @@ shinyServer(
                   choices=as.list(colnames(dataInput())))
     })
     output$files <- renderTable(input$upload)
-    output$head <- DT::renderDT(
-      dataInput(), extensions = 'Buttons', filter = "top", rownames=F,
-      
-    )
+    # output$head <- DT::renderDT(
+    #   dataInput(), extensions = 'Buttons', filter = "top", rownames=F,
+    #   
+    # )
+    
+    
+    output$head <- DT::renderDT({
+      datatable(dataInput(), extensions = 'Buttons', filter = "top",options = list(
+        scrollX = TRUE,
+        pageLength = 10  # Adjust the page length as needed
+      ))
+    })
+    
     
     encode_ordinal <- function(x, order = unique(x)) {
       x <- as.numeric(factor(x, levels = order, exclude = NULL))
@@ -77,13 +86,7 @@ shinyServer(
     observeEvent(input$preprocess, {
       claim <- data()
       claim <- claim[complete.cases(claim),]
-      # colTypes <- map(claim, class)
-      # 
-      # for (col in colnames(claim)) {
-      #   if (colTypes[col] == 'character') {
-      #     claim[[col]] <- encode_ordinal(claim[[col]])
-      #   }
-      # }
+  
       data(claim)
     })
     
@@ -116,11 +119,15 @@ shinyServer(
       summary_data <- describe(numeric_data)
       summary_data[] <- lapply(summary_data, function(x) if(is.numeric(x)) round(x, 3) else x)
       
+      # Remove 'vars' and 'n' columns from the summary_data
+      summary_data <- summary_data[, !(names(summary_data) %in% c("vars", "n"))]
+      
       datatable(
         summary_data,
         options = list(pageLength = 10)  # Adjust the page length as needed
       )
     })
+    
   
     output$nonNumericOutput <- renderUI({
      
@@ -131,9 +138,40 @@ shinyServer(
       
     })
    
+    # observeEvent(input$oversampleButton, {
+    #   #ajouter le code de oversampling
+    # })
+    
     observeEvent(input$oversampleButton, {
-      #ahouter le code of oversampling
+      # Ensure that data is available
+      req(data())
+      
+      # Retrieve the current dataset
+      current_data <- data()
+      
+      # Ensure the target variable is selected and available
+      req(input$target)
+      target_var <- input$target
+      
+      # Ensure the user has specified the number of samples
+      req(input$numSamples)
+      desired_samples <- as.numeric(input$numSamples)
+      
+      # Perform oversampling using ROSE
+      oversampled_data <- ROSE(formula = as.formula(paste(target_var, "~ .")), 
+                               data = current_data, 
+                               N = desired_samples * nrow(current_data),
+                               seed = 123)$data  # setting seed for reproducibility
+      
+      # Update the data with the oversampled data
+      data(oversampled_data)
+      
+      # Optionally: Update UI elements or provide a message to indicate completion
+      # output$someOutput <- renderText("Oversampling completed.")
     })
+    
+    
+    
     output$NonNumericalSummaryOut <- renderDT({
       non_numeric_data <- data() %>% select_if(function(x) !is.numeric(x))
       
@@ -186,15 +224,6 @@ shinyServer(
     
     
     
-    # 
-    #       output$PredictorsSummaryOut <- renderDT({
-    #         datatable(
-    #           describe(data()[, !(names(data()) %in% c(input$target))]),
-    #           options = list(pageLength = 10)  # Adjust the page length as needed
-    #         )
-    #       })
-    
-    
     output$OutcomeSummaryOut <- renderTable({ 
       describe(data()[input$target])
     }, rownames = T)
@@ -208,8 +237,6 @@ shinyServer(
                   y = data()[input$target], 
                   plot = 'pairs', auto.key = list(columns = 2))
     })
-    # generate variable selectors for individual plots
-    # ideas from https://gist.github.com/jcheng5/3239667
     output$expXaxisVarSelector <- renderUI({
       selectInput('expXaxisVar', 'Variable on x-axis', 
                   choices = as.list(colnames(data())), selected = colnames(data())[1])
@@ -338,6 +365,9 @@ shinyServer(
       
     })
     
+    
+ 
+    
     #split the data into train and test
     splitSlider <- reactive({
       input$fracTrain / 100
@@ -455,6 +485,19 @@ shinyServer(
         print(data.frame("RMSE"=rmse, "R2"=r2, "MAE"=mae, "MASE"=mase, "AdjR2"=adjr2))
       }
     }
+    
+    
+    # Server code to download the model
+    output$downloadModel <- downloadHandler(
+      filename = function() {
+        paste("your_model", Sys.Date(), ".rds", sep = "")  # Naming the file as 'your_model_date.rds'
+      },
+      content = function(file) {
+        # Save the model to a temporary file
+        model <- runModel()  # get the model
+        saveRDS(model, file)  # save the model to 'file'
+      }
+    )
     
     
     #training data accuracy
