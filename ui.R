@@ -72,6 +72,7 @@ shinyUI(
                                          label = "Oversampling x Times:", 
                                          value = 1,  # Default value, adjust as necessary
                                          min = 1),     # Minimum value, adjust as necessary
+                            # this part here is not going to show in main branch normalement. 
                             actionButton("oversampleButton", "Oversample Minority Class"),
                             
                             br(), br(),
