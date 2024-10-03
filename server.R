@@ -7,6 +7,7 @@ library(caret)
 # models for caret, need here explicitly for shinyapps deployment
 library(randomForest) # for rf
 library(gbm)    # for gbm
+library(shinyalert)
 library(mboost) # for glmboost
 library(klaR)   # for nb
 library(plyr)
@@ -17,6 +18,9 @@ library(pROC)
 library(yardstick)
 library(kableExtra)
 library(ROSE)
+
+library(smotefamily)
+options(shiny.maxRequestSize=170*1024^2) 
 
 disable <- function(x) {
   if (inherits(x, 'shiny.tag')) {
@@ -138,38 +142,99 @@ shinyServer(
       
     })
    
-    # observeEvent(input$oversampleButton, {
-    #   #ajouter le code de oversampling
-    # })
+  
+  
+    
+    observeEvent(input$undersampleButton, {
+      req(data())  # Ensure data is available
+      # print("ffffffffffffffffffffffff")
+      print(input$target)
+      df <- data()
+    
+      counts <- table(data()[[input$target]])
+      
+      minority_class <- names(counts)[which.min(counts)]
+      minority_count <- counts[minority_class]
+      # print("ffffffffffffffffffffffff")
+      print(minority_class)
+      print(minority_count)
+      # Sample the majority class
+      majority_class <- names(counts)[which.max(counts)]
+      # print(majority_class)
+      # print(colnames(df))
+      majority_data <- df[df$y == "1", ]
+      minority_data <- df[df$y == "2",]
+      
+      # Undersample the majority class
+      undersampled_majority <- majority_data %>% sample_n(minority_count)
+      
+      # Combine the undersampled majority with the minority class
+      balanced_data <- bind_rows(undersampled_majority, minority_data)      
+      # Update the data reactive value
+      data(balanced_data)
+    })
+    
+    
     
     observeEvent(input$oversampleButton, {
       # Ensure that data is available
       req(data())
-      
+
       # Retrieve the current dataset
       current_data <- data()
-      
+
       # Ensure the target variable is selected and available
       req(input$target)
       target_var <- input$target
-      
+
       # Ensure the user has specified the number of samples
       req(input$numSamples)
       desired_samples <- as.numeric(input$numSamples)
+
       
-      # Perform oversampling using ROSE
-      oversampled_data <- ROSE(formula = as.formula(paste(target_var, "~ .")), 
-                               data = current_data, 
-                               N = desired_samples * nrow(current_data),
-                               seed = 123)$data  # setting seed for reproducibility
-      
-      # Update the data with the oversampled data
-      data(oversampled_data)
-      
-      # Optionally: Update UI elements or provide a message to indicate completion
-      # output$someOutput <- renderText("Oversampling completed.")
-    })
+      smote_result <- SMOTE(current_data[, -which(names(current_data) == target_var)],  # Exclude target_var
+                            current_data[[target_var]],                                # Target column
+                            K = 5,    # Number of nearest neighbors
+                            dup_size = (desired_samples))  # Amount of oversampling
+
+      # Check the output of SMOTE
+      print(dim(smote_result$data))  # Check dimensions of generated data
+      print(length(smote_result$class))  # Check length of generated classes
+
+      # Check if any samples were generated
+      if (nrow(smote_result$data) > 0 && length(smote_result$class) > 0) {
+        # Combine the SMOTE-generated data with the original data
+        oversampled_data <- cbind(smote_result$data, target_var = smote_result$class)
+
+        # Update the data with the oversampled data
+        data(oversampled_data)
+      } 
+      else {
+        
+        showModal(modalDialog(
+          title = "Error",
+          "SMOTE did not generate any samples. Please check your input data.",
+          easyClose = TRUE,
+          footer = modalButton("OK")
+        ))
+        # shinyalert(
+        #   title = "Error", 
+        #   text = "SMOTE did not generate any samples. Please check your input data.", 
+        #   type = "error", 
+        #   closeOnClickOutside = TRUE,
+        #   callbackR = function() {
+        #     # Optional: add any action to perform after closing the alert
+        #   }
+        # )
+        # shinyalert("Error", "SMOTE did not generate any samples. Please check your input data.", type = "error", closeOnClickOutside = TRUE)
+      }
+
+
+      })
     
+    
+    
+
     
     
     output$NonNumericalSummaryOut <- renderDT({
@@ -225,9 +290,8 @@ shinyServer(
     
     
     output$OutcomeSummaryOut <- renderTable({ 
-      describe(data()[input$target])
-    }, rownames = T)
-    
+      table(data()[[input$target]])
+    }, rownames = FALSE)
     
     
     ## Explore Data
@@ -591,6 +655,9 @@ shinyServer(
         
         roc_curve <- roc(truthes, as.numeric(predictions))
         plot(roc_curve, col = "blue", main = "ROC Curve", lwd = 2)
+        # Calculate and display the AUC
+        auc_value <- auc(roc_curve)
+        legend("bottomright", legend = paste("AUC =", round(auc_value, 2)), col = "blue", lwd = 2)
         
         
       }
@@ -628,6 +695,10 @@ shinyServer(
         
         roc_curve <- roc(truthes, as.numeric(predictions))
         plot(roc_curve, col = "blue", main = "ROC Curve", lwd = 2)
+        
+        auc_value <- auc(roc_curve)
+        legend("bottomright", legend = paste("AUC =", round(auc_value, 2)), col = "blue", lwd = 2)
+        
       }
       
     })

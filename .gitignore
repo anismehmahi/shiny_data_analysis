@@ -3,3 +3,6 @@
 .RData
 .Ruserdata
 data_generator.py
+creditcard.csv
+bank-additional-full.csv
+data_dictionary.xlsx

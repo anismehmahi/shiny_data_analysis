@@ -24,10 +24,12 @@ disable <- function(x) {
 completeModelSummary <- function() {
   'TODO - This will be the model summary'
 }
-
+# useShinyalert()
 
 shinyUI(
+  
   fluidPage(
+    useShinyalert(),
     titlePanel('Data Analysis Dashboard'),
     
     navbarPage('',
@@ -56,45 +58,70 @@ shinyUI(
                         )
                ),
                
-               tabPanel('2. Data Summary',
-                        titlePanel(p("Data Summary", style = "color:#3474A7")),
-                        sidebarLayout(
-                          sidebarPanel(
-                            uiOutput(outputId = "dropSelected"),
-                            actionButton("drop", "Drop Columns"),
-                            br(), br(),
-                            h4("Press the buttons below for simple pre-processing :", style = 'color: black;'),
-                            actionButton("preprocess", "Remove missing data"),
-                            actionButton("categoricalconversion", "Oridinal-Encoding Categorical Features "),
-                            br(), br(),
-                            # Numeric input for specifying the number of samples after oversampling
-                            numericInput("numSamples", 
-                                         label = "Oversampling x Times:", 
-                                         value = 1,  # Default value, adjust as necessary
-                                         min = 1),     # Minimum value, adjust as necessary
-                            # this part here is not going to show in main branch normalement. 
-                            actionButton("oversampleButton", "Oversample Minority Class"),
-                            
-                            br(), br(),
-                            #h4("Null Values Percentage",style = 'color: black;'),
-                            DTOutput('NullPercentageOut'),
-                          ),
-                          
-                          mainPanel(
-                            h4('Numerical Feature'),
-                            DTOutput('PredictorsSummaryOut'),
-                            br(), 
-                            h4('Categorical Feature'),
-                            uiOutput("nonNumericOutput"),
+             tabPanel('2. Data Summary',
+         titlePanel(p("Data Summary", style = "color:#3474A7")),
+         sidebarLayout(
+           sidebarPanel(
+             uiOutput(outputId = "dropSelected"),
+             actionButton("drop", "Drop Columns"),
+             br(), br(),
+             h4("Press the button below for Removing missing data :", style = 'color: black;'),
+             actionButton("preprocess", "Remove missing data"),
+             br(), br(),
+             h4("Press the button below for Oridinal-Encoding :", style = 'color: black;'),
+             
+             actionButton("categoricalconversion", "Oridinal-Encoding Categorical Features "),
+             br(), br(),
+             
+             # Numeric input for specifying the number of samples after oversampling
+             numericInput("numSamples", 
+                          label = "Oversamplification / Undersamplification x Times:", 
+                          value = 1,  # Default value, adjust as necessary
+                          min = 1),     # Minimum value, adjust as necessary
+             
+             # Oversampling button
+             actionButton("oversampleButton", "Oversample Minority Class"),
+             actionButton("undersampleButton", "Undersample Majority Class "),
+             
+             
+             br(), br(),
+             
+             # # Undersampling method and button (added beside the oversample button)
+             # fluidRow(
+             #   column(6,
+             #          selectInput("undersampleMethod", 
+             #                      label = "Select Undersampling Method", 
+             #                      choices = list("Random Undersampling" = "Random", 
+             #                                     "Tomek Links" = "Tomek"),
+             #                      selected = "Random")
+             #   ),
+             #   column(6,
+             #          actionButton("undersampleButton", 
+             #                       label = "Perform Undersampling")
+             #   )
+             # ),
+             # 
+             # br(), br(),
+             
+             # Output for null values percentage (no change here)
+             DTOutput('NullPercentageOut')
+           ),
+           
+           mainPanel(
+             h4('Numerical Feature'),
+             DTOutput('PredictorsSummaryOut'),
+             br(), 
+             h4('Categorical Feature'),
+             uiOutput("nonNumericOutput"),
+             
+             DTOutput('NonNumericalSummaryOut'),
+             br(),
+             h4('Target'),
+             tableOutput('OutcomeSummaryOut')
+           )
+         )
+),
 
-                           
-                            DTOutput('NonNumericalSummaryOut'),
-                            br(),
-                            h4('Target'),
-                            tableOutput('OutcomeSummaryOut')
-                          )
-                        )
-               ),
                
                # explore the data
                tabPanel('3. Explore Data',
@@ -174,7 +201,7 @@ shinyUI(
                             
                             
                             uiOutput('featureSelectInput'),
-                            sliderInput("fracTrain", label = h4("Train Split %"), min=10, max=100, value=75, step=10),
+                            sliderInput("fracTrain", label = h4("Train Split %"), min=10, max=100, value=50, step=10),
                             br(),
                             radioButtons('mltype', "Choose the type of the task:",
                                          choices = c( "Classification"="clf","Regression"="reg"), 
