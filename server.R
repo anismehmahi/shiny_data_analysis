@@ -419,12 +419,16 @@ shinyServer(
                   'Select the machine learning algorithm',
                   
                   if (input$mltype == "reg") {
-                    choices= c('Generalized Linear Model (logit)' = 'glm',
-                               'Random Forests (may take a few minutes)' = 'rf')
+                    choices= c('Logistic regression' = 'glm',
+                               'Support Vector Machine' = 'gbm',
+                               'Decision Trees' = 'rf'
+                    )
                   }
                   else
-                    choices= c('Gradient Boosting' = 'gbm',
-                               'Random Forests (may take a few minutes)' = 'rf')
+                    choices= c('Logistic regression' = 'glm',
+                               'Support Vector Machine' = 'gbm',
+                               'Decision Trees' = 'rf'
+                               )
       ) 
       
     })
@@ -464,7 +468,7 @@ shinyServer(
         # df$input$target <- as.factor(df$input$target)
         # Convert target variable from numeric to factor
         df[[input$target]] <- as.factor(df[[input$target]])
-        if (modelType == 'gbm')
+        if (modelType == 'gbm' || modelType == 'rpart')
           train(f(), 
                 data=select(df, one_of(c(input$target, features))), 
                 method=modelType, preProcess=input$preProcessMethods, verbose=F, metric='Accuracy')
@@ -475,7 +479,7 @@ shinyServer(
       }
       
       else {
-        if (modelType == 'gbm')
+        if (modelType == 'gbm' || modelType == 'rpart')
           train(f(), 
                 data=select(df, one_of(c(input$target, features))), 
                 method=modelType, preProcess=input$preProcessMethods, verbose=F, metric='RMSE')
