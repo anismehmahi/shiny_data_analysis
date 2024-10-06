@@ -257,7 +257,155 @@ shinyUI(
                                  )
                           )
                         )
-               )
+               ),
+               
+                # In the '6. Rapport de Projet' tabPanel
+                tabPanel('6. Rapport de Projet',
+                         fluidPage(
+                           titlePanel(p("Rapport de Projet", style = "color:#3474A7")),
+                           
+                           # Display the section title
+                           h4(strong("1. Analyse exploratoire des données pour ce TP")),
+                           
+                           # Display the data attributes information
+                           h4(strong("** Dimensions, valeurs manquantes et attributs constants**", style = "font-weight: bold; color:#3474A7")),
+                           
+                           tags$div(
+                             HTML("<strong>Credit Fraud:</strong><br>
+                           Dimensions: 284807<br>
+                           Valeurs manquantes: 0<br>
+                           Attributs constants: Aucun")
+                           ),
+                           
+                           hr(),  # Horizontal line for separation
+                           
+                           tags$div(
+                             HTML("<strong>Bank Marketing:</strong><br>
+                           Dimensions: 411882<br>
+                           Valeurs manquantes: 0<br>
+                           Attributs constants: Aucun")
+                           ),
+                           
+                           hr(),  # Horizontal line for separation
+                           
+                           tags$div(
+                             HTML("<strong>Employee Attrition:</strong><br>
+                           Dimensions: 441029<br>
+                           Valeurs manquantes: 111<br>
+                           Attributs constants: 'EmployeeCount', 'Over18', 'StandardHours' (à supprimer quand vous lancez dans l'app)")
+                           ),
+                           
+                           hr(),  # Horizontal line for separation
+                           
+                           # Adding the graphs for churn proportions
+                           h4("** Proportion d'individus ayant churné **", style = "font-weight: bold; color:#3474A7"),
+                           
+                           fluidRow(
+                             # Deux premières images côte à côte
+                             column(6, 
+                                    h5(strong("1. Credit Fraud")),
+                                    img(src="credit_fraud_churn.png", height = '400px', width = '100%')
+                             ),
+                             column(6, 
+                                    h5(strong("2. Bank Marketing")),
+                                    img(src="bank_marketing_churn.png", height = '400px', width = '100%')
+                             )
+                           ),
+                           
+                           fluidRow(
+                             column(12, align = "center",
+                                    h5(strong("3. Employee Attrition")),
+                                    img(src="employee_attrition_churn.png", height = '400px', style = "display: block; margin-left: auto; margin-right: auto;")
+                             )
+                           ),
+                          
+                         ),
+                         
+                         h4("**Analyse des variables catégorielles (Bank-Marketing)**", style = "font-weight: bold; color:#3474A7"),
+                         
+                         # Ajouter une explication ou un sous-titre ici si nécessaire
+                         br(),
+                         
+                         fluidRow(
+                           # Deux premières images côte à côte
+                           column(6, 
+                                  img(src="2_1.png", height = '400px', width = '100%')
+                           ),
+                           column(6, 
+                                  img(src="2_2.png", height = '400px', width = '100%')
+                           )
+                         ),
+                         
+                         br(),
+                         
+                         # Centrer la troisième image tout en maintenant ses dimensions
+                         fluidRow(
+                           column(12, align = "center",
+                                  img(src="2_3.png", height = '400px', style = "display: block; margin-left: auto; margin-right: auto;")
+                           )
+                         ),
+                         
+                         br(),
+                         
+                         
+                         
+                         h4("**Analyse des variables numériques (Bank-Marketing)**", style = "font-weight: bold; color:#3474A7"),
+                         
+                         # Ajouter une explication ou un sous-titre ici si nécessaire
+                         br(),
+                         
+                         fluidRow(
+                           # Deux premières images côte à côte
+                           column(6, 
+                                  img(src="3_1.png", height = '400px', width = '100%')
+                           ),
+                           column(6, 
+                                  img(src="3_2.png", height = '400px', width = '100%')
+                           )
+                         ),
+
+                         
+                         br(),
+                         
+                         
+                         h4("**Matrice de corrélation des attributs**", style = "font-weight: bold; color:#3474A7"),
+                         
+                         # Ajouter une explication ou un sous-titre ici si nécessaire
+                         br(),
+                         
+                         fluidRow(
+                           # Deux premières images côte à côte
+                           column(6, 
+                                  h5(strong("1. Credit Fraud")),
+                                  img(src="4_credit_fraud.png", height = '400px', width = '100%')
+                           ),
+                           column(6, 
+                                  h5(strong("2. Bank Marketing")),
+                                  img(src="4_bank_mark.png", height = '400px', width = '100%')
+                           )
+                         ),
+                         
+                         br(),
+                         
+                         # Centrer la troisième image tout en maintenant ses dimensions
+                         fluidRow(
+                           column(12, align = "center",
+                                  h5(strong("3. Employee Attrition")),
+                                  img(src="4_employee_attrition.png", height = '400px', style = "display: block; margin-left: auto; margin-right: auto;")
+                           )
+                         ),
+                         
+                         br(),
+                )
+
+
+
+
+
+
+
+
+
     )
     
   )
