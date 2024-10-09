@@ -29,7 +29,7 @@ completeModelSummary <- function() {
 shinyUI(
   
   fluidPage(
-    useShinyalert(),
+    # useShinyalert(),
     titlePanel('Data Analysis Dashboard'),
     
     navbarPage('',
