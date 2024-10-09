@@ -31,7 +31,7 @@ completeModelSummary <- function() {
 shinyUI(
   
   fluidPage(
-    useShinyalert(),
+    # useShinyalert(),
     titlePanel('Data Analysis Dashboard'),
     
     navbarPage('',
@@ -260,15 +260,15 @@ shinyUI(
                ),
                
                 # In the '6. Rapport de Projet' tabPanel
-                tabPanel('6. Rapport de Projet',
+                tabPanel('6. Analyse exploratoire',
                          fluidPage(
-                           titlePanel(p("Rapport de Projet", style = "color:#3474A7")),
-                           
+                           titlePanel(p("Analyse exploratoire des données", style = "color:#3474A7")),
+                           hr(),  # 
                            # Display the section title
-                           h4(strong("1. Analyse exploratoire des données pour ce TP")),
+                           # h4(strong("1. Analyse exploratoire des données pour ce TP")),
                            
                            # Display the data attributes information
-                           h4(strong("** Dimensions, valeurs manquantes et attributs constants**", style = "font-weight: bold; color:#3474A7")),
+                           h3(strong("1. Dimensions, valeurs manquantes et attributs constants", style = "font-weight: bold; color:#3474A7")),
                            
                            tags$div(
                              HTML("<strong>Credit Fraud:</strong><br>
@@ -298,104 +298,174 @@ shinyUI(
                            hr(),  # Horizontal line for separation
                            
                            # Adding the graphs for churn proportions
-                           h4("** Proportion d'individus ayant churné **", style = "font-weight: bold; color:#3474A7"),
+                           h3("2. Proportion d'individus ayant churné", style = "font-weight: bold; color:#3474A7"),
                            
                            fluidRow(
                              # Deux premières images côte à côte
-                             column(6, 
+                             column(3, 
                                     h5(strong("1. Credit Fraud")),
-                                    img(src="credit_fraud_churn.png", height = '400px', width = '100%')
+                                    img(src="credit_fraud_churn.png", height = '100%', width = '100%')
                              ),
-                             column(6, 
+                             column(3, 
                                     h5(strong("2. Bank Marketing")),
-                                    img(src="bank_marketing_churn.png", height = '400px', width = '100%')
+                                    img(src="bank_marketing_churn.png", height = '100%', width = '100%')
+                             ),
+                             column(3, align = "center",
+                                    h5(strong("3. Employee Attrition")),
+                                    img(src="employee_attrition_churn.png", height = '100%', width = '100%')
                              )
+                             
                            ),
                            
-                           fluidRow(
-                             column(12, align = "center",
-                                    h5(strong("3. Employee Attrition")),
-                                    img(src="employee_attrition_churn.png", height = '400px', style = "display: block; margin-left: auto; margin-right: auto;")
-                             )
-                           ),
                           
                          ),
                          
-                         h4("**Analyse des variables catégorielles (Bank-Marketing)**", style = "font-weight: bold; color:#3474A7"),
+                         h3("3. Analyse des variables catégorielles", style = "font-weight: bold; color:#3474A7"),
                          
                          # Ajouter une explication ou un sous-titre ici si nécessaire
                          br(),
+                         h5(strong("Bank-Marketing Dataset")),
+                         
                          
                          fluidRow(
                            # Deux premières images côte à côte
-                           column(6, 
-                                  img(src="2_1.png", height = '400px', width = '100%')
+                           column(3, 
+                                  img(src="bank_categorical_default.png", height = '100%', width = '100%')
                            ),
-                           column(6, 
-                                  img(src="2_2.png", height = '400px', width = '100%')
-                           )
-                         ),
-                         
-                         br(),
-                         
-                         # Centrer la troisième image tout en maintenant ses dimensions
-                         fluidRow(
-                           column(12, align = "center",
-                                  img(src="2_3.png", height = '400px', style = "display: block; margin-left: auto; margin-right: auto;")
-                           )
-                         ),
-                         
-                         br(),
-                         
-                         
-                         
-                         h4("**Analyse des variables numériques (Bank-Marketing)**", style = "font-weight: bold; color:#3474A7"),
-                         
-                         # Ajouter une explication ou un sous-titre ici si nécessaire
-                         br(),
-                         
-                         fluidRow(
-                           # Deux premières images côte à côte
-                           column(6, 
-                                  img(src="3_1.png", height = '400px', width = '100%')
+                           column(3, 
+                                  img(src="bank_categorical_education.png", height = '100%', width = '100%')
                            ),
-                           column(6, 
-                                  img(src="3_2.png", height = '400px', width = '100%')
+                           column(3, 
+                                  img(src="bank_categorical_job.png", height = '100%', width = '100%')
+                           ),
+                           column(3, 
+                                  img(src="bank_categorical_poutcome.png", height = '100%', width = '100%')
                            )
                          ),
-
                          
                          br(),
                          
                          
-                         h4("**Matrice de corrélation des attributs**", style = "font-weight: bold; color:#3474A7"),
+                         h5(strong("Employee attrition Dataset")),
+                         
+                         
+                         fluidRow(
+                           # Deux premières images côte à côte
+                           column(3, 
+                                  img(src="employee_business.png", height = '100%', width = '100%')
+                           ),
+                           column(3, 
+                                  img(src="employee_departement.png", height = '100%', width = '100%')
+                           ),
+                           column(3, 
+                                  img(src="employee_education.png", height = '100%', width = '100%')
+                           ),
+                           column(3, 
+                                  img(src="employee_jobe.png", height = '100%', width = '100%')
+                           )
+                         ),
+                         
+                         br(),
+                         
+                         
+                         
+                         h3("4. Analyse des variables numériques", style = "font-weight: bold; color:#3474A7"),
+                         
+                         br(),
+                         h5(strong("Bank-Marketing Dataset")),
+                         
+                         
+                         fluidRow(
+                           # Deux premières images côte à côte
+                           column(3, 
+                                  img(src="marketing_histo1.png", height = '100%', width = '100%')
+                           ),
+                           column(3, 
+                                  img(src="marketing_histo2.png", height = '100%', width = '100%')
+                           ),
+                           column(3, 
+                                  img(src="marketing_histo3.png", height = '100%', width = '100%')
+                           ),
+                           column(3, 
+                                  img(src="marketing_histo4.png", height = '100%', width = '100%')
+                           )
+                         ),
+                         
+                         br(),
+                         
+                         h5(strong("Credit Fraud Dataset")),
+                         
+                         
+                         fluidRow(
+                           # Deux premières images côte à côte
+                           column(3, 
+                                  img(src="fraud4.png", height = '100%', width = '100%')
+                           ),
+                           column(3, 
+                                  img(src="fraud_1.png", height = '100%', width = '100%')
+                           ),
+                           column(3, 
+                                  img(src="fraud2.png", height = '100%', width = '100%')
+                           ),
+                           column(3, 
+                                  img(src="fraud3.png", height = '100%', width = '100%')
+                           )
+                         ),
+                         
+                         br(),
+                         
+                         
+                         h5(strong("Employee attrition Dataset")),
+                         
+                         
+                         fluidRow(
+                           # Deux premières images côte à côte
+                           column(3, 
+                                  img(src="employee_histo1.png", height = '100%', width = '100%')
+                           ),
+                           column(3, 
+                                  img(src="employee_histo2.png", height = '100%', width = '100%')
+                           ),
+                           column(3, 
+                                  img(src="employee_histo3.png", height = '100%', width = '100%')
+                           ),
+                           column(3, 
+                                  img(src="employee_histo4.png", height = '100%', width = '100%')
+                           )
+                         ),
+                         
+                         br(),
+                         
+                         
+                         
+                         h3("5. Matrice de corrélation des attributs", style = "font-weight: bold; color:#3474A7"),
                          
                          # Ajouter une explication ou un sous-titre ici si nécessaire
                          br(),
                          
                          fluidRow(
                            # Deux premières images côte à côte
-                           column(6, 
+                           column(6, align = "center",
                                   h5(strong("1. Credit Fraud")),
-                                  img(src="4_credit_fraud.png", height = '400px', width = '100%')
+                                  img(src="4_credit_fraud.png", height = '100%', width = '100%')
                            ),
-                           column(6, 
+                           column(5, align = "center",
                                   h5(strong("2. Bank Marketing")),
-                                  img(src="4_bank_mark.png", height = '400px', width = '100%')
-                           )
-                         ),
-                         
-                         br(),
-                         
-                         # Centrer la troisième image tout en maintenant ses dimensions
-                         fluidRow(
-                           column(12, align = "center",
+                                  img(src="4_bank_mark.png", height = '100%', width = '100%')
+                           ),
+                           column(6, align = "center",
                                   h5(strong("3. Employee Attrition")),
-                                  img(src="4_employee_attrition.png", height = '400px', style = "display: block; margin-left: auto; margin-right: auto;")
+                                  img(src="4_employee_attrition.png", height = '100%', width = '100%')
                            )
+                           
                          ),
                          
                          br(),
+
+                         h3("5. Conclusions", style = "font-weight: bold; color:#3474A7"),
+                         
+                       
+
                 )
 
 
