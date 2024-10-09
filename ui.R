@@ -3,6 +3,8 @@ library(DT)
 library(shinyWidgets)
 library(pROC)
 library(plotly)
+library(shinyalert)
+
 
 
 
@@ -255,7 +257,225 @@ shinyUI(
                                  )
                           )
                         )
-               )
+               ),
+               
+                # In the '6. Rapport de Projet' tabPanel
+                tabPanel('6. Analyse exploratoire',
+                         fluidPage(
+                           titlePanel(p("Analyse exploratoire des données", style = "color:#3474A7")),
+                           hr(),  # 
+                           # Display the section title
+                           # h4(strong("1. Analyse exploratoire des données pour ce TP")),
+                           
+                           # Display the data attributes information
+                           h3(strong("1. Dimensions, valeurs manquantes et attributs constants", style = "font-weight: bold; color:#3474A7")),
+                           
+                           tags$div(
+                             HTML("<strong>Credit Fraud:</strong><br>
+                           Dimensions: 284807<br>
+                           Valeurs manquantes: 0<br>
+                           Attributs constants: Aucun")
+                           ),
+                           
+                           hr(),  # Horizontal line for separation
+                           
+                           tags$div(
+                             HTML("<strong>Bank Marketing:</strong><br>
+                           Dimensions: 411882<br>
+                           Valeurs manquantes: 0<br>
+                           Attributs constants: Aucun")
+                           ),
+                           
+                           hr(),  # Horizontal line for separation
+                           
+                           tags$div(
+                             HTML("<strong>Employee Attrition:</strong><br>
+                           Dimensions: 441029<br>
+                           Valeurs manquantes: 111<br>
+                           Attributs constants: 'EmployeeCount', 'Over18', 'StandardHours' (à supprimer quand vous lancez dans l'app)")
+                           ),
+                           
+                           hr(),  # Horizontal line for separation
+                           
+                           # Adding the graphs for churn proportions
+                           h3("2. Proportion d'individus ayant churné", style = "font-weight: bold; color:#3474A7"),
+                           
+                           fluidRow(
+                             # Deux premières images côte à côte
+                             column(3, 
+                                    h5(strong("1. Credit Fraud")),
+                                    img(src="credit_fraud_churn.png", height = '100%', width = '100%')
+                             ),
+                             column(3, 
+                                    h5(strong("2. Bank Marketing")),
+                                    img(src="bank_marketing_churn.png", height = '100%', width = '100%')
+                             ),
+                             column(3, align = "center",
+                                    h5(strong("3. Employee Attrition")),
+                                    img(src="employee_attrition_churn.png", height = '100%', width = '100%')
+                             )
+                             
+                           ),
+                           
+                          
+                         ),
+                         
+                         h3("3. Analyse des variables catégorielles", style = "font-weight: bold; color:#3474A7"),
+                         
+                         # Ajouter une explication ou un sous-titre ici si nécessaire
+                         br(),
+                         h5(strong("Bank-Marketing Dataset")),
+                         
+                         
+                         fluidRow(
+                           # Deux premières images côte à côte
+                           column(3, 
+                                  img(src="bank_categorical_default.png", height = '100%', width = '100%')
+                           ),
+                           column(3, 
+                                  img(src="bank_categorical_education.png", height = '100%', width = '100%')
+                           ),
+                           column(3, 
+                                  img(src="bank_categorical_job.png", height = '100%', width = '100%')
+                           ),
+                           column(3, 
+                                  img(src="bank_categorical_poutcome.png", height = '100%', width = '100%')
+                           )
+                         ),
+                         
+                         br(),
+                         
+                         
+                         h5(strong("Employee attrition Dataset")),
+                         
+                         
+                         fluidRow(
+                           # Deux premières images côte à côte
+                           column(3, 
+                                  img(src="employee_business.png", height = '100%', width = '100%')
+                           ),
+                           column(3, 
+                                  img(src="employee_departement.png", height = '100%', width = '100%')
+                           ),
+                           column(3, 
+                                  img(src="employee_education.png", height = '100%', width = '100%')
+                           ),
+                           column(3, 
+                                  img(src="employee_jobe.png", height = '100%', width = '100%')
+                           )
+                         ),
+                         
+                         br(),
+                         
+                         
+                         
+                         h3("4. Analyse des variables numériques", style = "font-weight: bold; color:#3474A7"),
+                         
+                         br(),
+                         h5(strong("Bank-Marketing Dataset")),
+                         
+                         
+                         fluidRow(
+                           # Deux premières images côte à côte
+                           column(3, 
+                                  img(src="marketing_histo1.png", height = '100%', width = '100%')
+                           ),
+                           column(3, 
+                                  img(src="marketing_histo2.png", height = '100%', width = '100%')
+                           ),
+                           column(3, 
+                                  img(src="marketing_histo3.png", height = '100%', width = '100%')
+                           ),
+                           column(3, 
+                                  img(src="marketing_histo4.png", height = '100%', width = '100%')
+                           )
+                         ),
+                         
+                         br(),
+                         
+                         h5(strong("Credit Fraud Dataset")),
+                         
+                         
+                         fluidRow(
+                           # Deux premières images côte à côte
+                           column(3, 
+                                  img(src="fraud4.png", height = '100%', width = '100%')
+                           ),
+                           column(3, 
+                                  img(src="fraud_1.png", height = '100%', width = '100%')
+                           ),
+                           column(3, 
+                                  img(src="fraud2.png", height = '100%', width = '100%')
+                           ),
+                           column(3, 
+                                  img(src="fraud3.png", height = '100%', width = '100%')
+                           )
+                         ),
+                         
+                         br(),
+                         
+                         
+                         h5(strong("Employee attrition Dataset")),
+                         
+                         
+                         fluidRow(
+                           # Deux premières images côte à côte
+                           column(3, 
+                                  img(src="employee_histo1.png", height = '100%', width = '100%')
+                           ),
+                           column(3, 
+                                  img(src="employee_histo2.png", height = '100%', width = '100%')
+                           ),
+                           column(3, 
+                                  img(src="employee_histo3.png", height = '100%', width = '100%')
+                           ),
+                           column(3, 
+                                  img(src="employee_histo4.png", height = '100%', width = '100%')
+                           )
+                         ),
+                         
+                         br(),
+                         
+                         
+                         
+                         h3("5. Matrice de corrélation des attributs", style = "font-weight: bold; color:#3474A7"),
+                         
+                         # Ajouter une explication ou un sous-titre ici si nécessaire
+                         br(),
+                         
+                         fluidRow(
+                           # Deux premières images côte à côte
+                           column(6, align = "center",
+                                  h5(strong("1. Credit Fraud")),
+                                  img(src="4_credit_fraud.png", height = '100%', width = '100%')
+                           ),
+                           column(5, align = "center",
+                                  h5(strong("2. Bank Marketing")),
+                                  img(src="4_bank_mark.png", height = '100%', width = '100%')
+                           ),
+                           column(6, align = "center",
+                                  h5(strong("3. Employee Attrition")),
+                                  img(src="4_employee_attrition.png", height = '100%', width = '100%')
+                           )
+                           
+                         ),
+                         
+                         br(),
+
+                         h3("5. Conclusions", style = "font-weight: bold; color:#3474A7"),
+                         
+                       
+
+                )
+
+
+
+
+
+
+
+
+
     )
     
   )
