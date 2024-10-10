@@ -37,7 +37,7 @@ disable <- function(x) {
 
 shinyServer(
   function(input, output) {
-
+    
     ## Data Upload
     dataInput <- reactive({
       req(input$upload)
@@ -58,7 +58,43 @@ shinyServer(
     #   
     # )
     
-    
+    # In the server function
+    output$gridSearchParams <- renderUI({
+      req(input$machAlgorithm)
+      
+      switch(input$machAlgorithm,
+             "Random Forest" = {
+               tagList(
+                 numericInput("rf_ntree", "Number of trees", value = 500, min = 1),
+                 numericInput("rf_mtry", "Number of variables to possibly split at in each node", value = 3, min = 1),
+                 numericInput("rf_nodesize", "Minimum size of terminal nodes", value = 5, min = 1)
+               )
+             },
+             "SVM" = {
+               tagList(
+                 selectInput("svm_kernel", "Kernel", choices = c("linear", "radial", "polynomial")),
+                 numericInput("svm_cost", "Cost", value = 1, min = 0.1),
+                 numericInput("svm_gamma", "Gamma (for radial and polynomial kernels)", value = 1, min = 0.1)
+               )
+             },
+             "Logistic Regression" = {
+               tagList(
+                 numericInput("lr_alpha", "Alpha (for regularization)", value = 0, min = 0),
+                 selectInput("lr_family", "Family", choices = c("binomial", "gaussian"))
+               )
+             },
+             "XGBoost" = {
+               tagList(
+                 numericInput("xgb_eta", "Learning rate", value = 0.3, min = 0.01, max = 1, step = 0.01),
+                 numericInput("xgb_max_depth", "Max tree depth", value = 6, min = 1, step = 1),
+                 numericInput("xgb_subsample", "Subsample ratio", value = 1, min = 0.1, max = 1, step = 0.1),
+                 numericInput("xgb_colsample_bytree", "Column sample by tree", value = 1, min = 0.1, max = 1, step = 0.1)
+               )
+             },
+             # Add more algorithms as needed
+             NULL  # Default case if no algorithm is selected
+      )
+    })
     output$head <- DT::renderDT({
       datatable(dataInput(), extensions = 'Buttons', filter = "top",options = list(
         scrollX = TRUE,
@@ -90,7 +126,7 @@ shinyServer(
     observeEvent(input$preprocess, {
       claim <- data()
       claim <- claim[complete.cases(claim),]
-  
+      
       data(claim)
     })
     
@@ -132,25 +168,25 @@ shinyServer(
       )
     })
     
-  
-    output$nonNumericOutput <- renderUI({
-     
-        non_numeric_features <- colnames(data() %>% select_if(function(x) !is.numeric(x)))
-        selectInput("Sekectcatfeature", "Select categorical feature",
-                    choices=as.list(non_numeric_features), selected = non_numeric_features[1])
     
+    output$nonNumericOutput <- renderUI({
+      
+      non_numeric_features <- colnames(data() %>% select_if(function(x) !is.numeric(x)))
+      selectInput("Sekectcatfeature", "Select categorical feature",
+                  choices=as.list(non_numeric_features), selected = non_numeric_features[1])
+      
       
     })
-   
-  
-  
+    
+    
+    
     
     observeEvent(input$undersampleButton, {
       req(data())  # Ensure data is available
       # print("ffffffffffffffffffffffff")
       print(input$target)
       df <- data()
-    
+      
       counts <- table(data()[[input$target]])
       
       minority_class <- names(counts)[which.min(counts)]
@@ -179,33 +215,33 @@ shinyServer(
     observeEvent(input$oversampleButton, {
       # Ensure that data is available
       req(data())
-
+      
       # Retrieve the current dataset
       current_data <- data()
-
+      
       # Ensure the target variable is selected and available
       req(input$target)
       target_var <- input$target
-
+      
       # Ensure the user has specified the number of samples
       req(input$numSamples)
       desired_samples <- as.numeric(input$numSamples)
-
+      
       
       smote_result <- SMOTE(current_data[, -which(names(current_data) == target_var)],  # Exclude target_var
                             current_data[[target_var]],                                # Target column
                             K = 5,    # Number of nearest neighbors
                             dup_size = (desired_samples))  # Amount of oversampling
-
+      
       # Check the output of SMOTE
       print(dim(smote_result$data))  # Check dimensions of generated data
       print(length(smote_result$class))  # Check length of generated classes
-
+      
       # Check if any samples were generated
       if (nrow(smote_result$data) > 0 && length(smote_result$class) > 0) {
         # Combine the SMOTE-generated data with the original data
         oversampled_data <- cbind(smote_result$data, target_var = smote_result$class)
-
+        
         # Update the data with the oversampled data
         data(oversampled_data)
       } 
@@ -228,13 +264,13 @@ shinyServer(
         # )
         # shinyalert("Error", "SMOTE did not generate any samples. Please check your input data.", type = "error", closeOnClickOutside = TRUE)
       }
-
-
-      })
+      
+      
+    })
     
     
     
-
+    
     
     
     output$NonNumericalSummaryOut <- renderDT({
@@ -428,13 +464,13 @@ shinyServer(
                     choices= c('Logistic regression' = 'glm',
                                'Support Vector Machine' = 'gbm',
                                'Decision Trees' = 'rf'
-                               )
+                    )
       ) 
       
     })
     
     
- 
+    
     
     #split the data into train and test
     splitSlider <- reactive({
@@ -460,35 +496,71 @@ shinyServer(
     output$cntTest <- renderText({
       paste0("Test set: ", nrow(testData()), " records")
     })
+    grid_params <- list()
     
-    # apply model to training set
+    
+    
+    # apply model to training set with GridSearch, handling multi-class with multinom
     applyModel <- function(modelType, features) {
       df <- trainData()
+      
+      # Convert target variable from numeric to factor (for classification)
       if (input$mltype == "clf") {
-        # df$input$target <- as.factor(df$input$target)
-        # Convert target variable from numeric to factor
         df[[input$target]] <- as.factor(df[[input$target]])
-        if (modelType == 'gbm' || modelType == 'rpart')
-          train(f(), 
-                data=select(df, one_of(c(input$target, features))), 
-                method=modelType, preProcess=input$preProcessMethods, verbose=F, metric='Accuracy')
-        else
-          train(f(), 
-                data=select(df, one_of(c(input$target, features))), 
-                method=modelType, preProcess=input$preProcessMethods, metric='Accuracy')
+        metric <- 'Accuracy'
+      } else {
+        metric <- 'RMSE'
       }
       
-      else {
-        if (modelType == 'gbm' || modelType == 'rpart')
-          train(f(), 
-                data=select(df, one_of(c(input$target, features))), 
-                method=modelType, preProcess=input$preProcessMethods, verbose=F, metric='RMSE')
-        else
-          train(f(), 
-                data=select(df, one_of(c(input$target, features))), 
-                method=modelType, preProcess=input$preProcessMethods, metric='RMSE')
+      # Handle multi-class cases by using multinom for classification
+      if (modelType == 'glm' && length(unique(df[[input$target]])) > 2) {
+        modelType <- 'multinom'  # Switch to multinom for multi-class classification
       }
+      
+      # Define hyperparameter grids for different models
+      grid <- NULL
+      if (modelType == 'gbm') {
+        grid <- expand.grid(interaction.depth = c(1, 3, 5), 
+                            n.trees = c(50, 100, 150), 
+                            shrinkage = c(0.01, 0.1),
+                            n.minobsinnode = c(10, 20))
+      } else if (modelType == 'rpart') {
+        grid <- expand.grid(cp = seq(0.01, 0.1, 0.01))
+      } else if (modelType == 'rf') {
+        grid <- expand.grid(mtry = c(2, 3, 4))
+      } else if (modelType == 'svmRadial') {
+        grid <- expand.grid(sigma = c(0.01, 0.05), C = c(1, 10, 100))
+      }
+      else {
+        grid <- expand.grid(mtry = c(2, 3, 4))
+        
+      }
+      grid_params <- grid
+      # Afficher les paramètres de la grille
+      output$grid_params <- renderText({
+        if (is.null(grid)) {
+          # Formatter les paramètres pour l'affichage
+          grid_text <- paste("Grid Parameters:\n", paste(capture.output(print(grid)), collapse = "\n"))
+          return(grid_text)
+          }
+        # Formatter les paramètres pour l'affichage
+        grid_text <- paste("Grid Parameters:\n", paste(capture.output(print(grid)), collapse = "\n"))
+        return(grid_text)
+      })
+      # Train the model with GridSearch
+      train(f(), 
+            data = select(df, one_of(c(input$target, features))), 
+            method = modelType, 
+            preProcess = input$preProcessMethods, 
+            tuneGrid = grid, 
+            metric = metric,
+            trControl = trainControl(method = "cv", number = 5),  # 5-fold cross-validation
+            verbose = F)
     }
+
+      
+      
+    
     # reactive functions to run and evaluate model
     runModel <- reactive({
       applyModel(input$machLearnAlgorithm, input$featureSelect)
@@ -745,5 +817,5 @@ shinyServer(
     })
     
   }
-
+  
 )

@@ -209,6 +209,7 @@ shinyUI(
                                          choices = c( "Classification"="clf","Regression"="reg"), 
                                          selected = "clf"),
                             uiOutput('machAlgorithm'),
+                            verbatimTextOutput("grid_params") ,
                             # Button for downloading the model
                             downloadButton("downloadModel", "Save Model"),
                             
