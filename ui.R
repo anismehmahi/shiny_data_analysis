@@ -510,8 +510,27 @@ shinyUI(
                          ),
                          
                          
-          h4(strong("5.2. Credit Fraud Dataset"), style = "color:#3474A7"),
-          # ajouter 
+                         h4(strong("5.2. Credit Fraud Dataset"), style = "color:#3474A7"),
+                         
+                         tags$div(
+                           HTML("
+ <p><strong>1. Déséquilibre des données :</strong> Le jeu de données présente un fort déséquilibre entre les transactions frauduleuses et non frauduleuses, avec seulement 492 cas de fraude sur 284 315 transactions. Pour y remédier, nous avons appliqué un sous-échantillonnage aléatoire et utilisé la technique SMOTE pour équilibrer le jeu de données.</p>
+  
+  <p><strong>2. Analyse des corrélations :</strong> Les matrices de corrélation ont été utilisées pour identifier les caractéristiques ayant une influence significative sur les transactions frauduleuses. Il était important d'utiliser le jeu de données sous-échantillonné afin d'éviter les biais dus au déséquilibre initial des classes.</p>
+  
+  <p><strong>4. Défis liés au surapprentissage et à la fuite de données :</strong> Le surapprentissage a été identifié comme un problème critique, notamment lors de la validation croisée avec des données rééchantillonnées avant le processus, ce qui a entraîné une fuite de données. La solution a été d'effectuer le rééchantillonnage au sein de la validation croisée.</p>
+
+  <p><strong>5. Impact du SMOTE :</strong> L'application de SMOTE a amélioré le rappel mais a entraîné une baisse de la précision, ce qui signifie une augmentation des faux positifs. Cela représente un défi pour les institutions financières, car les faux positifs peuvent entraîner une insatisfaction des clients.</p>
+
+  <p><strong>6. Comparaison des performances des modèles :</strong></p>
+  <ul>
+    <li><strong>Avant l'application de SMOTE :</strong> Rappel : 0,90, Précision : 0,76, Score F1 : 0,82, Précision globale : 0,81.</li>
+    <li><strong>Après l'application de SMOTE :</strong> Précision globale : 0,969, Précision : 0,065, Rappel : 0,911, Score F1 : 0,121.</li>
+  </ul>
+  
+  <p><strong>7. Étapes suivantes :</strong> Les prochaines étapes incluent la suppression des valeurs aberrantes du jeu de données suréchantillonné et l'expérimentation avec d'autres techniques pour réduire les faux positifs tout en maintenant des taux élevés de détection de fraudes.</p>
+  ")
+                         ),
           
           h4(strong("5.3. Bank Marketing Dataset"), style = "color:#3474A7"),
           
