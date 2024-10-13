@@ -453,20 +453,18 @@ shinyServer(
     output$machAlgorithm <- renderUI({
       selectInput('machLearnAlgorithm', 
                   'Select the machine learning algorithm',
-                  
                   if (input$mltype == "reg") {
-                    choices= c('Logistic regression' = 'glm',
-                               'Support Vector Machine' = 'gbm',
-                               'Decision Trees' = 'rf'
-                    )
+                    choices = c('Linear Regression' = 'lm',
+                                'Random Forest' = 'rf',
+                                'SVM (Linear Kernel)' = 'svmLinear',
+                                'SVM (Radial Kernel)' = 'svmRadial')
+                  } else {
+                    choices = c(
+                                'Random Forest' = 'rf',
+                                'SVM (Linear Kernel)' = 'svmLinear',
+                                'SVM (Radial Kernel)' = 'svmRadial')
                   }
-                  else
-                    choices= c('Logistic regression' = 'glm',
-                               'Support Vector Machine' = 'gbm',
-                               'Decision Trees' = 'rf'
-                    )
       ) 
-      
     })
     
     
@@ -504,7 +502,6 @@ shinyServer(
     applyModel <- function(modelType, features) {
       df <- trainData()
       
-      # Convert target variable from numeric to factor (for classification)
       if (input$mltype == "clf") {
         df[[input$target]] <- as.factor(df[[input$target]])
         metric <- 'Accuracy'
@@ -512,41 +509,45 @@ shinyServer(
         metric <- 'RMSE'
       }
       
-      # Handle multi-class cases by using multinom for classification
+      # Handle multi-class cases
       if (modelType == 'glm' && length(unique(df[[input$target]])) > 2) {
-        modelType <- 'multinom'  # Switch to multinom for multi-class classification
+        modelType <- 'multinom'
       }
       
       # Define hyperparameter grids for different models
       grid <- NULL
-      if (modelType == 'gbm') {
-        grid <- expand.grid(interaction.depth = c(1, 3, 5), 
-                            n.trees = c(50, 100, 150), 
-                            shrinkage = c(0.01, 0.1),
-                            n.minobsinnode = c(10, 20))
-      } else if (modelType == 'rpart') {
-        grid <- expand.grid(cp = seq(0.01, 0.1, 0.01))
-      } else if (modelType == 'rf') {
-        grid <- expand.grid(mtry = c(2, 3, 4))
+      if (modelType == 'rf') {
+        grid <- expand.grid(
+          mtry = c(floor(sqrt(length(features))), floor(length(features)/3), floor(length(features)/2))
+        )
+      } else if (modelType == 'glm' || modelType == 'multinom') {
+        grid <- expand.grid(
+          alpha = c(0, 0.5, 1)
+        )
+      } else if (modelType == 'svmLinear') {
+        grid <- expand.grid(
+          C = c(0.1, 1, 10)
+        )
       } else if (modelType == 'svmRadial') {
-        grid <- expand.grid(sigma = c(0.01, 0.05), C = c(1, 10, 100))
+        grid <- expand.grid(
+          C = c(0.1, 1, 10),
+          sigma = c(0.01, 0.1, 1)
+        )
+      } else if (modelType == 'lm') {
+        grid <- NULL  # Linear regression doesn't typically use hyperparameter tuning
       }
-      else {
-        grid <- expand.grid(mtry = c(2, 3, 4))
-        
-      }
+      
       grid_params <- grid
-      # Afficher les paramètres de la grille
+      
+      # Display grid parameters
       output$grid_params <- renderText({
-        if (is.null(grid)) {
-          # Formatter les paramètres pour l'affichage
+        if (!is.null(grid)) {
           grid_text <- paste("Grid Parameters:\n", paste(capture.output(print(grid)), collapse = "\n"))
           return(grid_text)
-          }
-        # Formatter les paramètres pour l'affichage
-        grid_text <- paste("Grid Parameters:\n", paste(capture.output(print(grid)), collapse = "\n"))
-        return(grid_text)
+        }
+        return("No grid parameters for this model.")
       })
+      
       # Train the model with GridSearch
       train(f(), 
             data = select(df, one_of(c(input$target, features))), 
@@ -554,7 +555,7 @@ shinyServer(
             preProcess = input$preProcessMethods, 
             tuneGrid = grid, 
             metric = metric,
-            trControl = trainControl(method = "cv", number = 5),  # 5-fold cross-validation
+            trControl = trainControl(method = "cv", number = 5),
             verbose = F)
     }
 
@@ -572,18 +573,52 @@ shinyServer(
     output$featureImportance <- renderPrint({
       model <- runModel()  # Assuming `runModel()` returns your trained model
       
-      v <- varImp(model,scale = TRUE)[["importance"]]
-      v$Overall <- v$Overall / sum(v$Overall)
+      if (input$machLearnAlgorithm %in% c('rf', 'glm', 'multinom', 'lm')) {
+        v <- varImp(model, scale = TRUE)[["importance"]]
+        v$Overall <- v$Overall / sum(v$Overall)
+        
+        imp <- as.data.frame(v)
+        imp <- data.frame(names = rownames(imp), overall = imp$Overall)
+        imp <- imp[order(imp$overall, decreasing = TRUE),]
+        
+        print(imp)
+      } else if (input$machLearnAlgorithm == 'svmLinear') {
+  # Extraire les coefficients et le support vectoriel pour un SVM linéaire
+  weights <- colSums(model$finalModel@xmatrix[[1]] * model$finalModel@coef[[1]])
+  coef_names <- names(weights)
+  
+  # Vérifier si les poids sont bien extraits et non NULL
+  if (is.null(weights) || length(weights) == 0) {
+    stop("Les coefficients n'ont pas pu être extraits.")
+  }
+  
+  # Calculer l'importance des coefficients
+  importance <- abs(weights)
+  importance <- importance / max(importance, na.rm = TRUE)
+  
+  # Créer un data frame avec les noms de variables et leur importance
+  importance_df <- data.frame(
+    Variable = coef_names, 
+    Importance = importance
+  )
+  
+  # Trier par importance décroissante
+  importance_df <- importance_df[order(importance_df$Importance, decreasing = TRUE), ]
+  
+  # Afficher le tableau des coefficients d'importance
+  print(importance_df)
+}
+
       
-      imp <- as.data.frame(v)
-      imp <- data.frame(names= rownames(imp), overall = imp$Overall)
-      imp <- imp[order(imp$overall,decreasing = T),]
-      
-      print(imp)
-      
-      
-    }, width = 10000
-    )
+
+else if (input$machLearnAlgorithm == 'svmRadial') {
+        cat("Feature importance is not directly available for SVM with radial kernel.\n")
+        cat("Consider using a permutation importance method or other model-agnostic techniques for feature importance.")
+      }
+    }, width = 10000)
+    
+    # The applyModel function remains the same as in the previous version
+    
     
     
     
