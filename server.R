@@ -202,7 +202,7 @@ shinyServer(
       minority_data <- df[df$y == "2",]
       
       # Undersample the majority class
-      undersampled_majority <- majority_data %>% sample_n(minority_count)
+      undersampled_majority <- majority_data %>% sample_n(minority_count, replace = TRUE)
       
       # Combine the undersampled majority with the minority class
       balanced_data <- bind_rows(undersampled_majority, minority_data)      

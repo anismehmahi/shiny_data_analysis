@@ -462,9 +462,63 @@ shinyUI(
                          ),
                          
                          br(),
+                     
+                         
 
                          h3("5. Conclusions", style = "font-weight: bold; color:#3474A7"),
+                        
+                         h4(strong("5.1. Employee attrition Dataset"), style = "color:#3474A7"),
                          
+
+                         tags$div(
+                           HTML("
+  <p><strong>1. Valeurs manquantes :</strong> Le jeu de données contient très peu de valeurs manquantes, qui peuvent être supprimées sans affecter l'analyse globale.</p>
+  
+  <p><strong>2. Informations sur l'attrition :</strong></p>
+  <ul>
+    <li><strong>Rôle ayant le taux d'attrition le plus élevé :</strong> Les commerciaux (Sales Executive) ont le taux d'attrition le plus élevé.</li>
+    <li><strong>Département avec le taux d'attrition le plus élevé :</strong> Le département Recherche et Développement a le taux d'attrition le plus élevé.</li>
+  </ul>
+  
+  <p><strong>3. Analyse statistique :</strong> Nous avons réalisé des tests du Chi² pour évaluer les associations entre les variables et l'attrition :</p>
+  <ul>
+    <li><strong>Aucune association significative :</strong> Sexe, Niveau d'éducation.</li>
+    <li><strong>Association significative :</strong> Statut matrimonial, Revenu mensuel, Satisfaction professionnelle, Satisfaction de l'environnement de travail, Équilibre vie privée-vie professionnelle, et Âge.</li>
+  </ul>
+  
+  <p><strong>4. Déséquilibre des données :</strong> Le jeu de données est déséquilibré, ce qui signifie que la précision peut ne pas être la meilleure mesure pour évaluer les performances. À la place, les scores AUC et F1 fournissent une meilleure compréhension de l'efficacité du modèle.</p>
+
+  <p><strong>5. Performance du modèle :</strong></p>
+  <ul>
+    <li><strong>Score F1 initial :</strong> 0.214.</li>
+    <li><strong>Score F1 après sous-échantillonnage :</strong> 0.192. Le sous-échantillonnage a réduit le score F1 et le rappel, ce qui le rend moins efficace.</li>
+    <li><strong>Score F1 après sur-échantillonnage avec SMOTE :</strong> 0.4, montrant une amélioration notable des performances.</li>
+  </ul>
+
+  <p><strong>6. Importance des caractéristiques :</strong> Les caractéristiques clés à prendre en compte pour réduire l'attrition incluent :</p>
+  <ul>
+    <li>Satisfaction de l'environnement de travail</li>
+    <li>Revenu mensuel</li>
+    <li>Nombre total d'années de travail</li>
+    <li>Années dans l'entreprise</li>
+    <li>Distance du domicile</li>
+    <li>Années depuis la dernière promotion</li>
+  </ul>
+  
+  <p>Ces caractéristiques sont essentielles pour cibler des stratégies de rétention des employés et réduire les taux d'attrition dans l'entreprise.</p>
+  ")
+                         ),
+                         
+                         
+          h4(strong("5.2. Credit Fraud Dataset"), style = "color:#3474A7"),
+          # ajouter 
+          
+          h4(strong("5.3. Bank Marketing Dataset"), style = "color:#3474A7"),
+          
+                         
+          
+                         
+                       
                        
 
                 )
