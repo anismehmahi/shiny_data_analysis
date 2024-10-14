@@ -22,6 +22,10 @@ library(ROSE)
 library(smotefamily)
 options(shiny.maxRequestSize=170*1024^2) 
 
+if (!requireNamespace("kernlab", quietly = TRUE)) {
+  install.packages("kernlab")
+}
+
 disable <- function(x) {
   if (inherits(x, 'shiny.tag')) {
     if (x$name %in% c('input', 'select'))
@@ -53,12 +57,8 @@ shinyServer(
                   choices=as.list(colnames(dataInput())))
     })
     output$files <- renderTable(input$upload)
-    # output$head <- DT::renderDT(
-    #   dataInput(), extensions = 'Buttons', filter = "top", rownames=F,
-    #   
-    # )
-    
-    # In the server function
+
+        # In the server function
     output$gridSearchParams <- renderUI({
       req(input$machAlgorithm)
       
