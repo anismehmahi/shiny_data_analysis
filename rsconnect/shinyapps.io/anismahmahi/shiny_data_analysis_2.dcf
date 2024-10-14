@@ -1,0 +1,13 @@
+name: shiny_data_analysis_2
+title: shiny_data_analysis_2
+username: anismahmahi
+account: anismahmahi
+server: shinyapps.io
+hostUrl: https://api.shinyapps.io/v1
+appId: 13012352
+bundleId: 9221524
+url: https://anismahmahi.shinyapps.io/shiny_data_analysis_2/
+version: 1
+asMultiple: FALSE
+asStatic: FALSE
+ignoredFiles: Data_Cortex_Nuclear.csv|flexBoard.Rmd|heart _with_null.csv|heart.csv|hepatitis_combined.csv|renv.lock|data
