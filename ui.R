@@ -533,7 +533,49 @@ shinyUI(
                          ),
           
           h4(strong("5.3. Bank Marketing Dataset"), style = "color:#3474A7"),
-          
+                         
+          tags$div(
+            HTML("
+  <p><strong>1. Valeurs manquantes :</strong> Le jeu de données est complet, sans valeurs manquantes, ce qui permet une analyse approfondie sans nécessité de traitement des données manquantes.</p>
+  
+  <p><strong>2. Informations sur les métiers :</strong></p>
+  <ul>
+    <li><strong>Les groupes de métiers ayant le taux de succès le plus élevé :</strong> Les personnes travaillant dans l'administration (26.5%) et les ouvriers (22.6%) présentent les taux de réussite les plus élevés.</li>
+    <li><strong>Les métiers avec les taux de succès les plus faibles :</strong> Les étudiants (2.1%) et les chômeurs (2.5%) montrent les probabilités les plus faibles de succès.</li>
+  </ul>
+  
+  <p><strong>3. Analyse statistique :</strong> Nous avons réalisé des analyses de corrélation pour évaluer les associations entre les caractéristiques (par exemple, niveau d'éducation, âge) et la variable cible :</p>
+  <ul>
+    <li><strong>Corrélations significatives :</strong> Les individus ayant un diplôme universitaire (33.9%) ont les taux de réussite les plus élevés, indiquant une forte corrélation positive avec la variable cible.</li>
+    <li><strong>Faibles corrélations :</strong> Les caractéristiques telles que l'âge ou le type de contact ont montré des corrélations moins fortes avec le succès.</li>
+  </ul>
+  
+  <p><strong>4. Déséquilibre des données :</strong> Le jeu de données présente un déséquilibre marqué avec un nombre beaucoup plus élevé de résultats négatifs (non-souscriptions) que de positifs. Cet aspect pose un défi pour l'apprentissage automatique, où des techniques comme le sur-échantillonnage (SMOTE) ou le sous-échantillonnage peuvent être nécessaires pour équilibrer les classes.</p>
+
+  <p><strong>5. Techniques de traitement du déséquilibre :</strong></p>
+  <ul>
+    <li><strong>Sous-échantillonnage :</strong> Le sous-échantillonnage aléatoire a été utilisé pour réduire le déséquilibre de la classe. Toutefois, cette méthode peut entraîner une perte d'information et une diminution des performances du modèle (F1-score de 0.195).</li>
+    <li><strong>SMOTE :</strong> Le sur-échantillonnage avec la technique SMOTE a permis d'améliorer l'équilibre des classes et d'augmenter les performances du modèle (F1-score de 0.375). Cependant, il est important de réaliser le sur-échantillonnage après la division des données en ensembles d'entraînement et de test pour éviter les problèmes de fuite de données.</li>
+  </ul>
+
+  <p><strong>6. Problèmes d'ajustement du modèle :</strong> Nous avons analysé les courbes d'apprentissage pour évaluer les performances des modèles :</p>
+  <ul>
+    <li><strong>Sur-apprentissage :</strong> Un écart important entre les scores de l'ensemble d'entraînement et de validation indique un sur-apprentissage.</li>
+    <li><strong>Sous-apprentissage :</strong> Des scores bas dans les deux ensembles indiquent un sous-apprentissage.</li>
+    <li><strong>Modèle le plus performant :</strong> Le modèle de régression logistique a montré les meilleurs résultats sur les ensembles d'entraînement et de validation.</li>
+  </ul>
+
+  <p><strong>7. Importance des caractéristiques :</strong> Les principales caractéristiques qui influencent le succès des campagnes incluent :</p>
+  <ul>
+    <li>Le métier (administratif et ouvrier ont des taux de réussite élevés)</li>
+    <li>Niveau d'éducation (les diplômés universitaires ont une probabilité de succès plus élevée)</li>
+    <li>Nombre de contacts précédents</li>
+    <li>Conditions économiques (indice de confiance des consommateurs)</li>
+  </ul>
+  
+  <p>Ces résultats montrent l'importance de cibler les bonnes populations dans les campagnes marketing, tout en ajustant les stratégies pour maximiser les résultats. Le prochain pas pourrait inclure l'optimisation des hyperparamètres des modèles et l'expérimentation avec d'autres techniques de rééchantillonnage pour encore améliorer les performances.</p>
+  ")
+          )
                          
           
                          
